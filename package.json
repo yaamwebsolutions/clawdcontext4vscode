@@ -2,7 +2,7 @@
   "name": "clawdcontext",
   "displayName": "ClawdContext — Markdown OS for AI Agents",
   "description": "Context budget analyzer, .md linter, lessons governance, and CER dashboard for AI coding agent workflows (CLAUDE.md, SKILL.md, todo.md, lessons.md, hooks).",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "publisher": "clawdcontext",
   "author": {
     "name": "Claudisiar"

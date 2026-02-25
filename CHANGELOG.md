@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.3.0] — 2026-02-25
+
+### Added
+- **Modular command architecture** — Commands extracted into `src/commands/` module (analyzeWorkspace, lessonsCommands, generateReport, showDashboard)
+- **Barrel exports** — `src/analyzers/index.ts`, `src/providers/index.ts`, `src/commands/index.ts` for clean imports
+- **Multi-platform CI** — Matrix testing on Ubuntu, macOS, Windows; Node.js 20 + 22
+- **README badges** — Marketplace version, installs, license, CI status, stars, PRs welcome
+- **Install CTA** — One-click Marketplace install button in README
+- **Star History chart** — Embedded in README
+- **`.nvmrc` + `.node-version`** — Pin Node.js 22 for contributors
+
+### Changed
+- **extension.ts** — Reduced from 257 to ~105 lines (thin wiring layer)
+- **Dashboard** — Extracted from extension.ts into `src/commands/showDashboard.ts` with decomposed render functions
+- **CI workflow** — Now runs on push to `main` and `develop` branches; explicit `permissions: contents: read`
+- **Release workflow** — Uses `npm ci` instead of fallback logic
+- **README** — Restructured with feature table, Markdown OS model, contributing guide, star history chart
+- **CODEOWNERS** — Added `src/commands/*` path
+
+### Removed
+- `GITHUB_SETUP.md` — Redundant (content in CONTRIBUTING.md)
+- `PUBLISHING.md` — Redundant (content in CONTRIBUTING.md)
+- Committed `.vsix` artifact — Now only published via CI/CD releases
+
 ## [0.2.1] — 2026-02-25
 
 ### Changed

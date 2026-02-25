@@ -1,19 +1,36 @@
 # ClawdContext — Markdown OS for AI Coding Agents
 
-Stop prompting. Start orchestrating.
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/clawdcontext.clawdcontext?label=VS%20Code%20Marketplace&logo=visual-studio-code&color=0078d7)](https://marketplace.visualstudio.com/items?itemName=clawdcontext.clawdcontext)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/clawdcontext.clawdcontext?logo=visual-studio-code&color=059669)](https://marketplace.visualstudio.com/items?itemName=clawdcontext.clawdcontext)
+[![License: MIT](https://img.shields.io/github/license/yaamwebsolutions/clawdcontext4vscode?color=blue)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/yaamwebsolutions/clawdcontext4vscode/ci.yml?branch=main&label=CI&logo=github)](https://github.com/yaamwebsolutions/clawdcontext4vscode/actions/workflows/ci.yml)
+[![GitHub Stars](https://img.shields.io/github/stars/yaamwebsolutions/clawdcontext4vscode?style=social)](https://github.com/yaamwebsolutions/clawdcontext4vscode)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+**Stop prompting. Start orchestrating.**
+
+> *Part of the [ClawdContext](https://clawdcontext.com) AI Security Ecosystem*
+
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=clawdcontext.clawdcontext">
+    <img src="https://img.shields.io/badge/Install_from_Marketplace-0078d7?style=for-the-badge&logo=visual-studio-code&logoColor=white" alt="Install from Marketplace" />
+  </a>
+</p>
+
+---
 
 ClawdContext is a VS Code extension for teams using AI coding agents with `CLAUDE.md`, `AGENTS.md`, `SKILL.md`, `todo.md`, and `lessons.md`.
-It treats those files as a system, not a pile of prompts.
+It treats those files as a **system**, not a pile of prompts.
 
-Core idea:
+| File | Role |
+|---|---|
+| `CLAUDE.md` / `AGENTS.md` | Invariants and memory (kernel) |
+| `SKILL.md` | Reusable procedures (on-demand) |
+| `todo.md` | Local task state |
+| `lessons.md` | Governed learning cache |
+| hooks / tests | Deterministic enforcement |
 
-- `CLAUDE.md` / `AGENTS.md` = invariants and memory
-- `SKILL.md` = reusable procedures (on-demand)
-- `todo.md` = local task state
-- `lessons.md` = governed learning cache
-- hooks/tests = deterministic enforcement (outside the extension)
-
-ClawdContext helps you keep that system healthy with context-budget analysis, linting, governance checks, security scanning for skills, and quick-fix refactors.
+ClawdContext keeps that system healthy with **context-budget analysis**, **linting**, **governance checks**, **security scanning**, and **quick-fix refactors**.
 
 ## Why This Exists
 
@@ -24,16 +41,14 @@ Most teams fail in one of two ways:
 
 That creates context bloat, contradictions, and instruction drift.
 
-ClawdContext is built around the Markdown OS thesis:
+ClawdContext is built around the **Markdown OS thesis**:
 
-> The problem is not Markdown.  
+> The problem is not Markdown.
 > The problem is putting the wrong kind of instructions in the wrong Markdown file.
 
 This extension operationalizes that thesis inside VS Code.
 
-## What Ships in v0.2.0
-
-Current extension version in `package.json`: `0.2.0`
+## Features
 
 ### Feature Map (Eureka Concepts → Product Features)
 
@@ -195,28 +210,20 @@ Message:
 
 ## Install
 
-### VS Code Marketplace
-
-Search for:
-
-- `ClawdContext`
-
-Or install by CLI:
+### VS Code Marketplace (Recommended)
 
 ```bash
 code --install-extension clawdcontext.clawdcontext
 ```
 
-### Local VSIX (from your `eurka` folder)
+Or search **"ClawdContext"** in the Extensions panel (`Ctrl+Shift+X` / `Cmd+Shift+X`).
+
+### From VSIX (Local)
+
+Download the latest `.vsix` from [GitHub Releases](https://github.com/yaamwebsolutions/clawdcontext4vscode/releases), then:
 
 ```bash
-code --install-extension eurka/plugin_v2/clawdcontext-0.2.0.vsix
-```
-
-### Local VSIX (standalone extension repo)
-
-```bash
-code --install-extension ./clawdcontext-<version>.vsix
+code --install-extension clawdcontext-<version>.vsix
 ```
 
 ## Quick Start
@@ -316,55 +323,46 @@ npm run compile
 
 Then press `F5` in VS Code to launch the Extension Development Host.
 
-## Open Source (Contribute / Report / Discuss)
+## Contributing
 
-ClawdContext is prepared to run as a standalone open-source extension repo.
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-Start here:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request against `develop`
 
-- `CONTRIBUTING.md` — development workflow and PR standards
-- `CODE_OF_CONDUCT.md` — community expectations
-- `SECURITY.md` — private vulnerability reporting guidance
-- `SUPPORT.md` — where to ask what
-- `ROADMAP.md` — near-term priorities and contributor opportunities
-- `PUBLISHING.md` — VS Code Marketplace + Open VSX release flow
-- `GITHUB_SETUP.md` — branch protection and repo launch checklist
+**Good First Issues:** [Filter by label](https://github.com/yaamwebsolutions/clawdcontext4vscode/labels/good%20first%20issue)
 
-If you split the extension into its own repository (recommended), update `package.json` repository/bugs/discussions URLs before the first public release.
+See also:
 
-## Repo Structure (source tree)
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — Community expectations
+- [SECURITY.md](SECURITY.md) — Private vulnerability reporting
+- [SUPPORT.md](SUPPORT.md) — Where to ask what
+- [ROADMAP.md](ROADMAP.md) — Near-term priorities
 
-```text
-clawdcontext/
-├── src/
-│   ├── analyzers/
-│   │   ├── tokenAnalyzer.ts
-│   │   ├── diagnosticsProvider.ts
-│   │   └── securityScanner.ts
-│   ├── providers/
-│   │   ├── treeProvider.ts
-│   │   ├── statusBar.ts
-│   │   ├── codeLensProvider.ts
-│   │   └── codeActionProvider.ts
-│   ├── test/
-│   │   └── smoke.ts
-│   ├── utils/
-│   │   └── scaffold.ts
-│   └── extension.ts
-├── media/
-├── package.json
-└── README.md
-```
+## Star History
 
-Current workspace note:
-
-- In your website repo, the extension source currently lives at `eurka/plugin_v2/clawdcontext/`
+<a href="https://star-history.com/#yaamwebsolutions/clawdcontext4vscode&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=yaamwebsolutions/clawdcontext4vscode&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=yaamwebsolutions/clawdcontext4vscode&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=yaamwebsolutions/clawdcontext4vscode&type=Date" width="600" />
+  </picture>
+</a>
 
 ## License
 
-MIT
+[MIT](LICENSE) — see LICENSE for details.
 
 ## Closing Thesis
 
 The future of AI coding is not just better prompting.
 It is better orchestration, better memory hygiene, and better separation of concerns — with Markdown used deliberately, not dumped indiscriminately.
+
+---
+
+**Built with precision by [Yaam Web Solutions](https://clawdcontext.com)**
+
+[Install](https://marketplace.visualstudio.com/items?itemName=clawdcontext.clawdcontext) · [Report Issues](https://github.com/yaamwebsolutions/clawdcontext4vscode/issues) · [Discussions](https://github.com/yaamwebsolutions/clawdcontext4vscode/discussions)

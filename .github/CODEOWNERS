@@ -2,5 +2,6 @@
 
 .github/workflows/* @Ronald-Nyami
 src/analyzers/* @Ronald-Nyami
+src/commands/* @Ronald-Nyami
 src/providers/* @Ronald-Nyami
 package.json @Ronald-Nyami
