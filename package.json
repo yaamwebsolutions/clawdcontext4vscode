@@ -135,6 +135,21 @@
         "title": "ClawdContext: Analyze Kernel Bloat"
       },
       {
+        "command": "clawdcontext.cerDiff",
+        "title": "ClawdContext: Compare CER with Previous Commit",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "clawdcontext.applyPreset",
+        "title": "ClawdContext: Apply Config Preset",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "clawdcontext.exportDashboard",
+        "title": "ClawdContext: Export Dashboard",
+        "icon": "$(export)"
+      },
+      {
         "command": "clawdcontext.aiTestConnection",
         "title": "ClawdContext AI: Test Connection",
         "icon": "$(plug)"

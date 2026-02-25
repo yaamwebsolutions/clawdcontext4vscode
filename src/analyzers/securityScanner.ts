@@ -280,6 +280,76 @@ const SECURITY_PATTERNS: SecurityPattern[] = [
     description: 'Skill gathers system information that could be used for fingerprinting or targeted attacks.',
     reference: 'Reconnaissance is first stage of attack chain in compromised agent skills',
   },
+
+  // ── Supply-Chain Attacks ──────────────────────────────────────
+  {
+    id: 'SEC_SUPPLY_CHAIN',
+    name: 'Supply-chain manipulation',
+    severity: 'high',
+    patterns: [
+      /npm\s+install\s+(?:--save\s+)?[a-z][\w.-]*(?:\s|$)/gi,     // npm install <pkg>
+      /pip\s+install\s+(?:--user\s+)?[a-z][\w.-]*/gi,              // pip install <pkg>
+      /gem\s+install\s+[a-z][\w.-]*/gi,                            // gem install
+      /go\s+get\s+[a-z][\w./-]*/gi,                                // go get
+      /cargo\s+install\s+[a-z][\w.-]*/gi,                          // cargo install
+      /(?:npx|pnpx|bunx)\s+[a-z@][\w./-]*/gi,                     // npx executes from registry
+      /--registry\s+https?:\/\/(?!registry\.npmjs\.org)/gi,         // Custom npm registry
+      /pip\s+install\s+--index-url\s+https?:\/\//gi,               // Custom PyPI index
+    ],
+    description: 'Skill installs packages from external registries. Supply-chain attacks inject malicious code via typosquatted or compromised packages.',
+    reference: 'Snyk 2026: Supply-chain attacks via agent skill instructions installing malicious packages',
+  },
+
+  // ── SSRF (Server-Side Request Forgery) ────────────────────────
+  {
+    id: 'SEC_SSRF',
+    name: 'Server-side request forgery vectors',
+    severity: 'high',
+    patterns: [
+      /https?:\/\/169\.254\.169\.254/gi,                            // AWS metadata endpoint
+      /https?:\/\/metadata\.google\.internal/gi,                    // GCP metadata
+      /https?:\/\/100\.100\.100\.200/gi,                            // Azure metadata (IMDS)
+      /https?:\/\/(?:10\.\d+|172\.(?:1[6-9]|2\d|3[01])|192\.168)\.\d+\.\d+/gi, // Internal IPs
+      /https?:\/\/localhost(?::\d+)?\/(?!$)/gi,                     // localhost with path
+      /https?:\/\/127\.0\.0\.\d+(?::\d+)?\/(?!$)/gi,               // loopback with path
+      /(?:gopher|dict|file|ftp):\/\//gi,                            // Protocol-based SSRF
+    ],
+    description: 'Skill targets internal network endpoints, cloud metadata services, or uses unusual protocols. Could leak cloud credentials or access internal APIs.',
+    reference: 'OWASP SSRF: Agent skills with cloud metadata access leak IAM credentials',
+  },
+
+  // ── Path Traversal ────────────────────────────────────────────
+  {
+    id: 'SEC_PATH_TRAVERSAL',
+    name: 'Path traversal / directory escape',
+    severity: 'high',
+    patterns: [
+      /\.\.\/\.\.\/\.\.\//g,                                        // Triple traversal
+      /\.\.\\\.\.\\\.\.(?:\\|\/)/g,                                  // Windows-style traversal
+      /%2e%2e(?:%2f|%5c)/gi,                                        // URL-encoded traversal
+      /(?:readFile|writeFile|unlink|rmdir|mkdir)\s*\(\s*['"`].*\.\.\//gi, // Node fs with traversal
+      /(?:open|read|write|unlink)\s*\(\s*['"`].*\.\.\//gi,         // Python file ops with traversal
+      /symlink|hardLink|fs\.link/gi,                                 // Symlink attacks
+    ],
+    description: 'Skill uses path traversal to access files outside its expected directory. Could read secrets or overwrite critical files.',
+    reference: 'CWE-22: Path traversal is a top-10 vulnerability used to escape agent sandboxes',
+  },
+
+  // ── Privilege Escalation ──────────────────────────────────────
+  {
+    id: 'SEC_PRIVESC',
+    name: 'Privilege escalation attempts',
+    severity: 'critical',
+    patterns: [
+      /\bsudo\s+/gi,                                                // sudo commands
+      /\bchmod\s+[0-7]*[67][0-7]{2}\b/gi,                          // chmod with setuid/setgid
+      /\bchown\s+root/gi,                                           // changing ownership to root
+      /\bsetuid\b|\bsetgid\b|\bcapabilities\b/gi,                  // capability manipulation
+      /\/usr\/bin\/doas|pkexec|polkit/gi,                           // elevation tools
+    ],
+    description: 'Skill attempts to elevate privileges via sudo, setuid, or similar mechanisms.',
+    reference: 'Privilege escalation in agent contexts allows full host compromise',
+  },
 ];
 
 // ─── Scanner ────────────────────────────────────────────────────────

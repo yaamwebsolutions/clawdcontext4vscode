@@ -19,12 +19,14 @@ ClawdContext is already useful in production workflows, but the goal is a catego
 
 ## Current Focus (0.4.x)
 
+- [x] CER diff tracking — "what changed CER?" comparison between git commits
+- [x] Config presets — `strict` / `balanced` / `permissive` workspace profiles
+- [x] Dashboard export — JSON + Markdown report artifacts
+- [x] Richer `SKILL.md` security scanner patterns (supply-chain, SSRF, path traversal, privilege escalation)
+- [x] Optional AI capabilities — OpenAI, Anthropic/Claude, Ollama with enterprise TLS support
+- [x] Security scanner allowlist, trusted domains, code-block awareness
 - [ ] BPE-backed tokenizer (replace character-ratio estimation with cl100k_base-calibrated counts)
-- [ ] CER diff tracking — "what changed CER?" comparison between git commits
-- [ ] Positional heatmap — visual attention map with drag-to-reorder suggestions
-- [ ] Config presets — `strict` / `balanced` / `permissive` workspace profiles
-- [ ] Dashboard export — JSON + Markdown report artifacts
-- [ ] Richer `SKILL.md` security scanner patterns (supply-chain, SSRF, path traversal)
+- [ ] Positional heatmap improvements — drag-to-reorder suggestions
 
 ## Next (0.5.x)
 

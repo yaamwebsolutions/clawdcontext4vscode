@@ -4,14 +4,23 @@
 
 ### Added
 - **CER diff tracking** — Compare context efficiency between git commits to pinpoint what changed CER
-- **Positional heatmap** — Visual attention map highlighting instruction placement with drag-to-reorder suggestions
 - **Config presets** — `strict`, `balanced`, `permissive` workspace profiles for different team policies
 - **Dashboard export** — Save dashboard state as JSON or Markdown report artifacts
-- **BPE tokenizer** — Replace character-ratio estimation with cl100k_base-calibrated token counts
+- **Optional AI capabilities** — Multi-provider support (OpenAI, Anthropic/Claude, Ollama) with enterprise TLS/CA certificate support
+  - `AI: Test Connection` — verify provider setup
+  - `AI: Review Agent Config` — AI-powered CER and kernel optimization suggestions
+  - `AI: Explain Diagnostic` — context-aware diagnostic explanations
+  - `AI: Suggest Refactor` — AI-powered extraction recommendations (kernel → skills)
+  - `AI: Security Review` — deep semantic security analysis beyond regex patterns
+- **Security scanner allowlist** — Suppress specific SEC_* rule codes for first-party skills
+- **Trusted domains** — Whitelist domains for SEC_EXFIL_FETCH pattern matching
+- **Code-block awareness** — Automatically suppress findings inside markdown fenced code blocks and inline backticks
 
 ### Changed
-- Expanded SKILL.md security scanner with supply-chain, SSRF, and path-traversal patterns
-- Performance improvements for workspace analysis
+- Expanded SKILL.md security scanner with 4 new pattern categories: supply-chain, SSRF, path traversal, privilege escalation (17 → 21 patterns)
+- Dashboard now shows AI provider status card
+- Security table shows active vs suppressed finding counts
+- Added 7 new AI settings, 3 security settings, and 3 new commands (20 total)
 
 ## [0.3.0] — 2026-02-25
 

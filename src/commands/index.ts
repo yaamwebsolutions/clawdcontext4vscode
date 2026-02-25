@@ -9,3 +9,6 @@ export type { WorkspaceDeps, WorkspaceState } from './analyzeWorkspace';
 export { pruneLessons, promoteLessons } from './lessonsCommands';
 export { generateReport } from './generateReport';
 export { showDashboard } from './showDashboard';
+export { cerDiffCommand } from './cerDiffTracking';
+export { applyConfigPreset } from './configPresets';
+export { exportDashboard } from './dashboardExport';

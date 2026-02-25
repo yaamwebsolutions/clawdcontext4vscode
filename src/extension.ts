@@ -23,6 +23,9 @@ import {
 import { pruneLessons, promoteLessons } from './commands/lessonsCommands';
 import { generateReport } from './commands/generateReport';
 import { showDashboard } from './commands/showDashboard';
+import { cerDiffCommand } from './commands/cerDiffTracking';
+import { applyConfigPreset } from './commands/configPresets';
+import { exportDashboard } from './commands/dashboardExport';
 import {
   aiTestConnection,
   aiReviewConfig,
@@ -95,6 +98,10 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('clawdcontext.moveToLessons', moveToLessonsCommand),
     vscode.commands.registerCommand('clawdcontext.archiveDeprecated', archiveDeprecatedCommand),
     vscode.commands.registerCommand('clawdcontext.analyzeBloat', analyzeBloatCommand),
+    // --- v0.4.0 commands ---
+    vscode.commands.registerCommand('clawdcontext.cerDiff', cerDiffCommand),
+    vscode.commands.registerCommand('clawdcontext.applyPreset', applyConfigPreset),
+    vscode.commands.registerCommand('clawdcontext.exportDashboard', exportDashboard),
     // --- AI commands (optional — gracefully degrade when not configured) ---
     vscode.commands.registerCommand('clawdcontext.aiTestConnection', aiTestConnection),
     vscode.commands.registerCommand('clawdcontext.aiReviewConfig', aiReviewConfig),
