@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0] — Unreleased
+
+### Added
+- **CER diff tracking** — Compare context efficiency between git commits to pinpoint what changed CER
+- **Positional heatmap** — Visual attention map highlighting instruction placement with drag-to-reorder suggestions
+- **Config presets** — `strict`, `balanced`, `permissive` workspace profiles for different team policies
+- **Dashboard export** — Save dashboard state as JSON or Markdown report artifacts
+- **BPE tokenizer** — Replace character-ratio estimation with cl100k_base-calibrated token counts
+
+### Changed
+- Expanded SKILL.md security scanner with supply-chain, SSRF, and path-traversal patterns
+- Performance improvements for workspace analysis
+
 ## [0.3.0] — 2026-02-25
 
 ### Added

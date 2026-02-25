@@ -2,28 +2,37 @@
 
 ClawdContext is already useful in production workflows, but the goal is a category-defining VS Code extension for AI coding agent Markdown systems.
 
-## Current Focus (0.2.x)
+## Shipped
 
-- Stabilize diagnostics and reduce false positives
-- Improve code action reliability on real-world markdown variants
-- Harden packaging/release automation (Marketplace + Open VSX)
-- Improve onboarding (examples, screenshots, demo GIFs)
+### 0.2.x — Foundation
 
-## Next (0.3.x)
+- ✅ Diagnostics, code actions, security scanner, scaffold templates
+- ✅ Marketplace + Open VSX packaging automation
+- ✅ Onboarding (demo screenshot, README badges, install CTA)
 
-- Accurate tokenizer integration (BPE-backed counts)
-- Better contradiction detection (semantic/structured rules)
-- Richer `SKILL.md` security scanner rules + tuning
-- More dashboard exports (JSON/Markdown report artifacts)
-- Workspace-level config presets (strict / balanced / permissive)
+### 0.3.x — Modularization
 
-## Next (0.4.x)
+- ✅ Command architecture extracted to `src/commands/`
+- ✅ Multi-platform CI (Ubuntu / macOS / Windows × Node 20 / 22)
+- ✅ Secret scanning workflow (gitleaks)
+- ✅ Branch strategy (main + develop, protection rules)
 
-- "What changed CER?" diff tracking between commits
-- Positional heatmap improvements and reordering suggestions
-- Rule suppression/waiver UX with audit trail
-- Performance tuning for large monorepos
-- Sample repos for common agent stacks (Claude Code, OpenClaw-style, hybrid)
+## Current Focus (0.4.x)
+
+- [ ] BPE-backed tokenizer (replace character-ratio estimation with cl100k_base-calibrated counts)
+- [ ] CER diff tracking — "what changed CER?" comparison between git commits
+- [ ] Positional heatmap — visual attention map with drag-to-reorder suggestions
+- [ ] Config presets — `strict` / `balanced` / `permissive` workspace profiles
+- [ ] Dashboard export — JSON + Markdown report artifacts
+- [ ] Richer `SKILL.md` security scanner patterns (supply-chain, SSRF, path traversal)
+
+## Next (0.5.x)
+
+- Rule suppression / waiver UX with inline `<!-- clawdcontext-ignore -->` and audit trail
+- Performance tuning for large monorepos (incremental analysis, file-change debouncing)
+- Sample repos for common agent stacks (Claude Code, Cursor, Windsurf, hybrid)
+- Contradiction detection v2 (semantic rules beyond keyword matching)
+- Multi-root workspace support
 
 ## Contributor-Friendly Areas
 

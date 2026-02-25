@@ -2,7 +2,7 @@
   "name": "clawdcontext",
   "displayName": "ClawdContext — Markdown OS for AI Agents",
   "description": "VS Code extension for AI coding agent Markdown systems: CER dashboard, mdcc-style diagnostics, lessons governance, SKILL.md security scanning, and quick-fix refactors.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "clawdcontext",
   "author": {
     "name": "Claudisiar"
@@ -213,12 +213,19 @@
         },
         "clawdcontext.alwaysLoadedFiles": {
           "type": "array",
-          "default": ["CLAUDE.md", "AGENTS.md", ".claude/settings.json"],
+          "default": [
+            "CLAUDE.md",
+            "AGENTS.md",
+            ".claude/settings.json"
+          ],
           "description": "Files always loaded into context (counted toward CER)"
         },
         "clawdcontext.onDemandPatterns": {
           "type": "array",
-          "default": ["**/SKILL.md", "**/skills/**"],
+          "default": [
+            "**/SKILL.md",
+            "**/skills/**"
+          ],
           "description": "Glob patterns for on-demand files (not counted as always-loaded)"
         },
         "clawdcontext.enableCodeLens": {
@@ -237,25 +244,42 @@
       {
         "id": "clawdcontext.cerOptimal",
         "description": "CER Optimal indicator color",
-        "defaults": { "dark": "#059669", "light": "#059669" }
+        "defaults": {
+          "dark": "#059669",
+          "light": "#059669"
+        }
       },
       {
         "id": "clawdcontext.cerWarning",
         "description": "CER Warning indicator color",
-        "defaults": { "dark": "#D97706", "light": "#D97706" }
+        "defaults": {
+          "dark": "#D97706",
+          "light": "#D97706"
+        }
       },
       {
         "id": "clawdcontext.cerCritical",
         "description": "CER Critical indicator color",
-        "defaults": { "dark": "#DC2626", "light": "#DC2626" }
+        "defaults": {
+          "dark": "#DC2626",
+          "light": "#DC2626"
+        }
       }
     ],
     "languages": [
       {
         "id": "markdown-agent",
-        "aliases": ["Agent Markdown"],
+        "aliases": [
+          "Agent Markdown"
+        ],
         "extensions": [],
-        "filenames": ["CLAUDE.md", "AGENTS.md", "lessons.md", "todo.md", "SKILL.md"],
+        "filenames": [
+          "CLAUDE.md",
+          "AGENTS.md",
+          "lessons.md",
+          "todo.md",
+          "SKILL.md"
+        ],
         "configuration": "./language-configuration.json"
       }
     ]
