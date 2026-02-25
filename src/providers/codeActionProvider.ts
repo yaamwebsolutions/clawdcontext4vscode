@@ -263,7 +263,7 @@ export class ClawdContextCodeActionProvider implements vscode.CodeActionProvider
     edit.insert(
       document.uri,
       new vscode.Position(0, 0),
-      `---\nname: ${skillName}\ndescription: TODO — describe what this skill does\n---\n\n`
+      `---\nname: ${skillName}\ndescription: <describe what this skill does>\n---\n\n`
     );
     action.edit = edit;
     return action;

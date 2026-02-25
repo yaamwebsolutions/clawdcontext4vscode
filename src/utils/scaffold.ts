@@ -94,24 +94,24 @@ const TEMPLATES: Record<string, string> = {
 };
 
 const SKILL_TEMPLATE = `---
-name: example-skill
-description: Brief description of what this skill does
+name: <skill-name>
+description: <what this skill enables the agent to do>
 ---
 
-# Example Skill
+# <Skill Name>
 
 ## Goal
-Describe the specific outcome this skill achieves.
+<Describe the specific outcome this skill achieves.>
 
 ## Steps
-1. First step
-2. Second step
-3. Third step
+1. <Gather context — read relevant files and understand current state>
+2. <Execute — apply the change, fix, or generation>
+3. <Validate — run tests, lint, or build to confirm correctness>
 
 ## Output Format
 - Summary of what was done
-- Evidence (logs/tests)
-- Residual risk
+- Evidence (logs, test results, build output)
+- Residual risk or follow-up items
 `;
 
 export async function scaffoldMarkdownOS(): Promise<void> {
