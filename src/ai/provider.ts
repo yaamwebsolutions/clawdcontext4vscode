@@ -1,9 +1,9 @@
 /**
- * AI Provider abstraction for ClawdContext.
+ * AI Provider — Multi-provider abstraction for ClawdContext.
  *
- * Supports OpenAI, Anthropic (Claude), and Ollama — all optional.
- * Uses Node.js built-in https/http modules (no SDK dependencies).
- * Supports enterprise CA certificates and proxy configurations.
+ * Supports: OpenAI, Anthropic (Claude), Azure OpenAI, Ollama, DeepSeek.
+ * Uses Node.js built-in https/http modules (zero runtime dependencies).
+ * Enterprise-grade: PFX/P12 mTLS, PEM cert+key, custom CA, proxy support.
  */
 
 import * as vscode from 'vscode';
@@ -14,7 +14,7 @@ import * as tls from 'tls';
 
 // ─── Types ──────────────────────────────────────────────────────────
 
-export type AiProvider = 'none' | 'openai' | 'anthropic' | 'ollama';
+export type AiProvider = 'none' | 'openai' | 'anthropic' | 'azure-openai' | 'ollama' | 'deepseek';
 
 export interface AiMessage {
   role: 'system' | 'user' | 'assistant';
@@ -31,6 +31,7 @@ export interface AiCompletionResult {
   content: string;
   model: string;
   tokensUsed?: number;
+  latencyMs?: number;
 }
 
 export interface AiConfig {
@@ -38,24 +39,40 @@ export interface AiConfig {
   apiKey: string;
   model: string;
   baseUrl: string;
+  maxTokens: number;
+  temperature: number;
+  // Enterprise cert auth
   caCertPath: string;
+  certPath: string;
+  keyPath: string;
+  pfxPath: string;
+  pfxPassphrase: string;
   rejectUnauthorized: boolean;
   timeout: number;
+  // Azure-specific
+  azureDeployment: string;
+  azureApiVersion: string;
 }
 
-// ─── Configuration ──────────────────────────────────────────────────
+// ─── Default Provider Config ────────────────────────────────────────
 
 const DEFAULT_MODELS: Record<Exclude<AiProvider, 'none'>, string> = {
-  openai: 'gpt-4o-mini',
+  openai: 'gpt-4o',
   anthropic: 'claude-sonnet-4-20250514',
+  'azure-openai': 'gpt-4o',
   ollama: 'llama3.2',
+  deepseek: 'deepseek-chat',
 };
 
 const DEFAULT_URLS: Record<Exclude<AiProvider, 'none'>, string> = {
   openai: 'https://api.openai.com',
   anthropic: 'https://api.anthropic.com',
+  'azure-openai': '',
   ollama: 'http://localhost:11434',
+  deepseek: 'https://api.deepseek.com',
 };
+
+// ─── Configuration ──────────────────────────────────────────────────
 
 export function getAiConfig(): AiConfig {
   const cfg = vscode.workspace.getConfiguration('clawdcontext.ai');
@@ -66,55 +83,103 @@ export function getAiConfig(): AiConfig {
     apiKey: cfg.get<string>('apiKey', ''),
     model: cfg.get<string>('model', '') || (provider !== 'none' ? DEFAULT_MODELS[provider] : ''),
     baseUrl: cfg.get<string>('baseUrl', '') || (provider !== 'none' ? DEFAULT_URLS[provider] : ''),
+    maxTokens: cfg.get<number>('maxTokens', 4096),
+    temperature: cfg.get<number>('temperature', 0.3),
     caCertPath: cfg.get<string>('caCertPath', ''),
+    certPath: cfg.get<string>('certPath', ''),
+    keyPath: cfg.get<string>('keyPath', ''),
+    pfxPath: cfg.get<string>('pfxPath', ''),
+    pfxPassphrase: cfg.get<string>('pfxPassphrase', ''),
     rejectUnauthorized: cfg.get<boolean>('rejectUnauthorized', true),
     timeout: cfg.get<number>('timeout', 30000),
+    azureDeployment: cfg.get<string>('azureDeployment', ''),
+    azureApiVersion: cfg.get<string>('azureApiVersion', '2024-10-21'),
   };
 }
 
 export function isAiEnabled(): boolean {
   const config = getAiConfig();
   if (config.provider === 'none') { return false; }
-  // Ollama doesn't need an API key
   if (config.provider === 'ollama') { return true; }
+  // Azure OpenAI can use mTLS without API key
+  if (config.provider === 'azure-openai' && (config.pfxPath || config.certPath)) { return true; }
   return config.apiKey.length > 0;
+}
+
+/** Human-readable provider label. */
+export function getProviderLabel(provider: AiProvider): string {
+  const labels: Record<AiProvider, string> = {
+    'none': 'Disabled',
+    'openai': 'OpenAI',
+    'anthropic': 'Anthropic',
+    'azure-openai': 'Azure OpenAI',
+    'ollama': 'Ollama',
+    'deepseek': 'DeepSeek',
+  };
+  return labels[provider];
 }
 
 // ─── TLS / Certificate Handling ─────────────────────────────────────
 
-/**
- * Build HTTPS agent with enterprise certificate support.
- * Supports:
- * - Custom CA certificate bundles (PEM files)
- * - Concatenated CA chains
- * - Disabling TLS verification (not recommended, but needed for some proxies)
- */
 function buildHttpsAgent(config: AiConfig): https.Agent {
   const options: https.AgentOptions = {
     rejectUnauthorized: config.rejectUnauthorized,
     keepAlive: true,
   };
 
+  let needsCustom = false;
+
+  // PFX/P12 certificate bundle (Windows/Azure enterprise, mTLS)
+  if (config.pfxPath) {
+    try {
+      const pfxPath = config.pfxPath.replace(/^~/, process.env.HOME || '');
+      if (fs.existsSync(pfxPath)) {
+        options.pfx = fs.readFileSync(pfxPath);
+        if (config.pfxPassphrase) { options.passphrase = config.pfxPassphrase; }
+        needsCustom = true;
+        console.log(`ClawdContext AI: loaded PFX certificate from ${pfxPath}`);
+      }
+    } catch (e) {
+      console.error(`ClawdContext AI: failed to load PFX cert: ${e}`);
+    }
+  }
+
+  // PEM certificate + key (Linux/container mTLS)
+  if (config.certPath && config.keyPath) {
+    try {
+      const certPath = config.certPath.replace(/^~/, process.env.HOME || '');
+      const keyPath = config.keyPath.replace(/^~/, process.env.HOME || '');
+      if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+        options.cert = fs.readFileSync(certPath);
+        options.key = fs.readFileSync(keyPath);
+        needsCustom = true;
+        console.log(`ClawdContext AI: loaded PEM cert+key`);
+      }
+    } catch (e) {
+      console.error(`ClawdContext AI: failed to load PEM cert: ${e}`);
+    }
+  }
+
+  // Custom CA certificate (enterprise root CA, corporate proxy)
   if (config.caCertPath) {
     try {
-      const certPath = config.caCertPath.replace(/^~/, process.env.HOME || '');
-      if (fs.existsSync(certPath)) {
-        const caCert = fs.readFileSync(certPath);
-        // Combine with system CAs so both enterprise and public CAs work
-        options.ca = [
-          ...tls.rootCertificates,
-          caCert.toString(),
-        ];
-        console.log(`ClawdContext AI: loaded CA certificate from ${certPath}`);
+      const caPath = config.caCertPath.replace(/^~/, process.env.HOME || '');
+      if (fs.existsSync(caPath)) {
+        const caCert = fs.readFileSync(caPath);
+        options.ca = [...tls.rootCertificates, caCert.toString()];
+        needsCustom = true;
+        console.log(`ClawdContext AI: loaded CA certificate from ${caPath}`);
       } else {
-        console.warn(`ClawdContext AI: CA cert not found at ${certPath}`);
+        console.warn(`ClawdContext AI: CA cert not found at ${caPath}`);
       }
     } catch (err) {
       console.error(`ClawdContext AI: failed to load CA cert: ${err}`);
     }
   }
 
-  return new https.Agent(options);
+  if (!config.rejectUnauthorized) { needsCustom = true; }
+
+  return new https.Agent(needsCustom ? options : { keepAlive: true });
 }
 
 // ─── HTTP Request Helper ────────────────────────────────────────────
@@ -140,15 +205,13 @@ function makeRequest(opts: RequestOptions): Promise<string> {
       method: opts.method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'ClawdContext-VSCode/0.4.0',
+        'User-Agent': 'ClawdContext-VSCode/0.5.0',
         ...opts.headers,
       },
       timeout: opts.config.timeout,
     };
 
-    if (isHttps) {
-      reqOptions.agent = buildHttpsAgent(opts.config);
-    }
+    if (isHttps) { reqOptions.agent = buildHttpsAgent(opts.config); }
 
     const req = transport.request(reqOptions, (res) => {
       let data = '';
@@ -157,22 +220,14 @@ function makeRequest(opts: RequestOptions): Promise<string> {
         if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
           resolve(data);
         } else {
-          reject(new Error(
-            `AI API error ${res.statusCode}: ${data.substring(0, 500)}`
-          ));
+          reject(new Error(`AI API error ${res.statusCode}: ${data.substring(0, 500)}`));
         }
       });
     });
 
     req.on('error', reject);
-    req.on('timeout', () => {
-      req.destroy();
-      reject(new Error(`AI API request timed out after ${opts.config.timeout}ms`));
-    });
-
-    if (opts.body) {
-      req.write(opts.body);
-    }
+    req.on('timeout', () => { req.destroy(); reject(new Error(`AI request timed out (${opts.config.timeout}ms)`)); });
+    if (opts.body) { req.write(opts.body); }
     req.end();
   });
 }
@@ -180,21 +235,19 @@ function makeRequest(opts: RequestOptions): Promise<string> {
 // ─── Provider Implementations ───────────────────────────────────────
 
 async function completeOpenAI(config: AiConfig, options: AiCompletionOptions): Promise<AiCompletionResult> {
+  const start = Date.now();
   const body = JSON.stringify({
     model: config.model,
     messages: options.messages,
-    temperature: options.temperature ?? 0.3,
-    max_tokens: options.maxTokens ?? 2000,
+    temperature: options.temperature ?? config.temperature,
+    max_tokens: options.maxTokens ?? config.maxTokens,
   });
 
   const response = await makeRequest({
     url: `${config.baseUrl}/v1/chat/completions`,
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${config.apiKey}`,
-    },
-    body,
-    config,
+    headers: { 'Authorization': `Bearer ${config.apiKey}` },
+    body, config,
   });
 
   const json = JSON.parse(response);
@@ -202,11 +255,12 @@ async function completeOpenAI(config: AiConfig, options: AiCompletionOptions): P
     content: json.choices?.[0]?.message?.content || '',
     model: json.model || config.model,
     tokensUsed: json.usage?.total_tokens,
+    latencyMs: Date.now() - start,
   };
 }
 
 async function completeAnthropic(config: AiConfig, options: AiCompletionOptions): Promise<AiCompletionResult> {
-  // Anthropic uses a different format: system is separate, messages are user/assistant only
+  const start = Date.now();
   const systemMsg = options.messages.find(m => m.role === 'system');
   const chatMessages = options.messages
     .filter(m => m.role !== 'system')
@@ -214,21 +268,17 @@ async function completeAnthropic(config: AiConfig, options: AiCompletionOptions)
 
   const body = JSON.stringify({
     model: config.model,
-    max_tokens: options.maxTokens ?? 2000,
+    max_tokens: options.maxTokens ?? config.maxTokens,
     ...(systemMsg ? { system: systemMsg.content } : {}),
     messages: chatMessages,
-    temperature: options.temperature ?? 0.3,
+    temperature: options.temperature ?? config.temperature,
   });
 
   const response = await makeRequest({
     url: `${config.baseUrl}/v1/messages`,
     method: 'POST',
-    headers: {
-      'x-api-key': config.apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body,
-    config,
+    headers: { 'x-api-key': config.apiKey, 'anthropic-version': '2023-06-01' },
+    body, config,
   });
 
   const json = JSON.parse(response);
@@ -237,26 +287,50 @@ async function completeAnthropic(config: AiConfig, options: AiCompletionOptions)
     content: textBlock?.text || '',
     model: json.model || config.model,
     tokensUsed: json.usage ? (json.usage.input_tokens + json.usage.output_tokens) : undefined,
+    latencyMs: Date.now() - start,
+  };
+}
+
+async function completeAzureOpenAI(config: AiConfig, options: AiCompletionOptions): Promise<AiCompletionResult> {
+  const start = Date.now();
+  const deployment = config.azureDeployment || config.model;
+  const apiVersion = config.azureApiVersion || '2024-10-21';
+  const url = `${config.baseUrl}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`;
+
+  const body = JSON.stringify({
+    max_tokens: options.maxTokens ?? config.maxTokens,
+    temperature: options.temperature ?? config.temperature,
+    messages: options.messages,
+  });
+
+  const headers: Record<string, string> = {};
+  if (config.apiKey) { headers['api-key'] = config.apiKey; }
+
+  const response = await makeRequest({ url, method: 'POST', headers, body, config });
+  const json = JSON.parse(response);
+  return {
+    content: json.choices?.[0]?.message?.content || '',
+    model: json.model || deployment,
+    tokensUsed: json.usage?.total_tokens,
+    latencyMs: Date.now() - start,
   };
 }
 
 async function completeOllama(config: AiConfig, options: AiCompletionOptions): Promise<AiCompletionResult> {
+  const start = Date.now();
   const body = JSON.stringify({
     model: config.model,
     messages: options.messages,
     stream: false,
     options: {
-      temperature: options.temperature ?? 0.3,
-      num_predict: options.maxTokens ?? 2000,
+      temperature: options.temperature ?? config.temperature,
+      num_predict: options.maxTokens ?? config.maxTokens,
     },
   });
 
   const response = await makeRequest({
     url: `${config.baseUrl}/api/chat`,
-    method: 'POST',
-    headers: {},
-    body,
-    config,
+    method: 'POST', headers: {}, body, config,
   });
 
   const json = JSON.parse(response);
@@ -264,15 +338,37 @@ async function completeOllama(config: AiConfig, options: AiCompletionOptions): P
     content: json.message?.content || '',
     model: json.model || config.model,
     tokensUsed: json.eval_count ? (json.prompt_eval_count + json.eval_count) : undefined,
+    latencyMs: Date.now() - start,
+  };
+}
+
+async function completeDeepSeek(config: AiConfig, options: AiCompletionOptions): Promise<AiCompletionResult> {
+  const start = Date.now();
+  const body = JSON.stringify({
+    model: config.model,
+    messages: options.messages,
+    temperature: options.temperature ?? config.temperature,
+    max_tokens: options.maxTokens ?? config.maxTokens,
+  });
+
+  const response = await makeRequest({
+    url: `${config.baseUrl}/v1/chat/completions`,
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${config.apiKey}` },
+    body, config,
+  });
+
+  const json = JSON.parse(response);
+  return {
+    content: json.choices?.[0]?.message?.content || '',
+    model: json.model || config.model,
+    tokensUsed: json.usage?.total_tokens,
+    latencyMs: Date.now() - start,
   };
 }
 
 // ─── Public API ─────────────────────────────────────────────────────
 
-/**
- * Send a completion request to the configured AI provider.
- * Throws if AI is not configured or the request fails.
- */
 export async function aiComplete(options: AiCompletionOptions): Promise<AiCompletionResult> {
   const config = getAiConfig();
 
@@ -281,22 +377,22 @@ export async function aiComplete(options: AiCompletionOptions): Promise<AiComple
   }
 
   if (config.provider !== 'ollama' && !config.apiKey) {
-    throw new Error(`API key required for ${config.provider}. Set clawdcontext.ai.apiKey in settings.`);
+    if (config.provider !== 'azure-openai' || (!config.pfxPath && !config.certPath)) {
+      throw new Error(`API key required for ${getProviderLabel(config.provider)}. Set clawdcontext.ai.apiKey in settings.`);
+    }
   }
 
   switch (config.provider) {
-    case 'openai':    return completeOpenAI(config, options);
-    case 'anthropic': return completeAnthropic(config, options);
-    case 'ollama':    return completeOllama(config, options);
+    case 'openai':        return completeOpenAI(config, options);
+    case 'anthropic':     return completeAnthropic(config, options);
+    case 'azure-openai':  return completeAzureOpenAI(config, options);
+    case 'ollama':        return completeOllama(config, options);
+    case 'deepseek':      return completeDeepSeek(config, options);
     default:
       throw new Error(`Unknown AI provider: ${config.provider}`);
   }
 }
 
-/**
- * Test the AI connection with a simple ping.
- * Returns the model name on success, throws on failure.
- */
 export async function testAiConnection(): Promise<string> {
   const result = await aiComplete({
     messages: [
@@ -306,5 +402,7 @@ export async function testAiConnection(): Promise<string> {
     maxTokens: 20,
     temperature: 0,
   });
-  return `Connected to ${result.model}`;
+
+  const latency = result.latencyMs ? ` (${result.latencyMs}ms)` : '';
+  return `Connected to ${getProviderLabel(getAiConfig().provider)} — ${result.model}${latency}`;
 }

@@ -6,10 +6,15 @@
  */
 
 import * as vscode from 'vscode';
-import * as fs from 'fs';
 import * as path from 'path';
-import { isAiEnabled, aiComplete, testAiConnection, getAiConfig } from './provider';
-import { state } from '../commands/analyzeWorkspace';
+import { isAiEnabled, aiComplete, testAiConnection, getAiConfig, getProviderLabel } from './provider';
+import { SYSTEM_PROMPT_ANALYST } from './prompts';
+import * as validator from './aiValidator';
+import * as generator from './aiGenerator';
+import { state, analyzeWorkspace } from '../commands/analyzeWorkspace';
+import { estimateTokens } from '../analyzers/tokenAnalyzer';
+import type { AgentFile } from '../analyzers/tokenAnalyzer';
+import type { Violation } from './aiValidator';
 
 // ─── Guards ─────────────────────────────────────────────────────────
 
@@ -56,21 +61,7 @@ function requireWorkspace(): boolean {
   return true;
 }
 
-// ─── System Prompt ──────────────────────────────────────────────────
-
-const SYSTEM_PROMPT = `You are ClawdContext AI, an expert assistant for Markdown OS / agent kernel systems.
-
-You help users optimise their AI coding agent configuration files (CLAUDE.md, AGENTS.md, SKILL.md, lessons.md, todo.md).
-
-Key concepts you know deeply:
-- **CER (Context Efficiency Ratio)**: useful tokens / total tokens. Target > 0.6.
-- **Markdown OS layers**: Kernel (CLAUDE.md), Skills (SKILL.md), Tasks (todo.md), Learning (lessons.md), Hooks (.clawdcontext/hooks/).
-- **Lost-in-the-Middle (LoitM)**: Critical instructions in the middle of long documents get lower attention. Put them at start or end.
-- **Shannon SNR**: More instructions ≠ more performance. Noise drowns signal.
-- **Lazy loading**: Skills should be loaded on-demand, not always. Keeps CER high.
-- **Security patterns**: SKILL.md files can contain shell commands, env vars, URLs that are legitimate docs but could be injection vectors.
-
-Be concise, actionable, and specific. Use bullet points. Reference CER numbers when relevant.`;
+// System prompt is imported from ./prompts.ts (SYSTEM_PROMPT_ANALYST)
 
 // ─── Commands ───────────────────────────────────────────────────────
 
@@ -363,16 +354,15 @@ async function streamToDocument(title: string, userPrompt: string): Promise<void
       try {
         const result = await aiComplete({
           messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'system', content: SYSTEM_PROMPT_ANALYST },
             { role: 'user', content: userPrompt },
           ],
           temperature: 0.3,
           maxTokens: 3000,
         });
 
-        // Create a new untitled document with the result
         const doc = await vscode.workspace.openTextDocument({
-          content: `# ${title}\n\n${result.content}\n\n---\n_Model: ${result.model}${result.tokensUsed ? ` · ${result.tokensUsed} tokens` : ''}_\n`,
+          content: `# ${title}\n\n${result.content}\n\n---\n_Model: ${result.model}${result.tokensUsed ? ` · ${result.tokensUsed} tokens` : ''}${result.latencyMs ? ` · ${result.latencyMs}ms` : ''}_\n`,
           language: 'markdown',
         });
         await vscode.window.showTextDocument(doc, { preview: false });
@@ -382,4 +372,264 @@ async function streamToDocument(title: string, userPrompt: string): Promise<void
       }
     },
   );
+}
+
+// ─── AI Validate Workspace ──────────────────────────────────────────
+
+export async function aiValidateWorkspace(): Promise<void> {
+  if (!requireAi()) { return; }
+  if (!state.budget) { await analyzeWorkspace(); }
+  if (!state.budget) { return; }
+
+  const results = await vscode.window.withProgress(
+    { location: vscode.ProgressLocation.Notification, title: 'AI validating agent files...', cancellable: false },
+    async (progress) => validator.validateWorkspace(state.budget!, progress),
+  );
+
+  const lines = ['# AI Validation Report (mdcc)', '',
+    `Provider: ${getProviderLabel(getAiConfig().provider)} | Files: ${results.length}`, ''];
+
+  for (const r of results) {
+    const gate = validator.computeQualityGate(r.score);
+    const icon = gate.gate === 'PRODUCTION' ? '✅' : gate.gate === 'MANUAL_REVIEW' ? '⚠️' : '❌';
+    lines.push(`## ${icon} ${r.file} — ${r.score}/100 (${r.verdict})`);
+    lines.push(`Quality Gate: **${gate.gate}** | Latency: ${r.latencyMs}ms`, '');
+
+    if (r.violations.length > 0) {
+      lines.push('| Rule | Severity | Message | Fix |', '|------|----------|---------|-----|');
+      for (const v of r.violations) {
+        lines.push(`| ${v.rule} | ${v.severity} | ${v.message} | ${v.fix} |`);
+      }
+      lines.push('');
+    }
+    if (r.suggestions.length > 0) {
+      lines.push('**Suggestions:**');
+      for (const s of r.suggestions) { lines.push(`- ${s}`); }
+      lines.push('');
+    }
+  }
+
+  const doc = await vscode.workspace.openTextDocument({ content: lines.join('\n'), language: 'markdown' });
+  await vscode.window.showTextDocument(doc);
+}
+
+// ─── AI Validate Current File ───────────────────────────────────────
+
+export async function aiValidateFile(): Promise<void> {
+  if (!requireAi()) { return; }
+
+  const editor = vscode.window.activeTextEditor;
+  if (!editor || !editor.document.fileName.endsWith('.md')) {
+    vscode.window.showWarningMessage('Open a .md agent file to validate.');
+    return;
+  }
+  if (!state.budget) { await analyzeWorkspace(); }
+  if (!state.budget) { return; }
+
+  const file = state.budget.allFiles.find(f => editor.document.uri.toString() === f.uri.toString());
+  if (!file) { vscode.window.showWarningMessage('This file is not recognized as an agent file.'); return; }
+
+  const result = await vscode.window.withProgress(
+    { location: vscode.ProgressLocation.Notification, title: `AI validating ${file.relativePath}...` },
+    async () => validator.validateFile(file),
+  );
+
+  const gate = validator.computeQualityGate(result.score);
+  const icon = gate.gate === 'PRODUCTION' ? '✅' : gate.gate === 'MANUAL_REVIEW' ? '⚠️' : '❌';
+
+  const action = await vscode.window.showInformationMessage(
+    `${icon} ${file.relativePath}: ${result.score}/100 (${gate.gate}). ${result.violations.length} violation(s).`,
+    ...(result.violations.length > 0 ? ['AI Fix', 'Show Details'] : ['Show Details']),
+  );
+
+  if (action === 'AI Fix') {
+    await aiFixWithViolations(file, result.violations);
+  } else if (action === 'Show Details') {
+    const detail = result.violations.length > 0
+      ? result.violations.map(v => `[${v.severity}] ${v.rule}: ${v.message}`).join('\n')
+      : 'No violations found.';
+    const doc = await vscode.workspace.openTextDocument({
+      content: `# ${file.relativePath}\nScore: ${result.score}/100\nGate: ${gate.gate}\n\n${detail}`,
+      language: 'markdown',
+    });
+    await vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside);
+  }
+}
+
+// ─── AI Generate Missing Files ──────────────────────────────────────
+
+export async function aiGenerateMissing(): Promise<void> {
+  if (!requireAi()) { return; }
+  if (!state.budget) { await analyzeWorkspace(); }
+
+  const result = await vscode.window.withProgress(
+    { location: vscode.ProgressLocation.Notification, title: 'AI generating missing agent files...' },
+    async (progress) => generator.generateMissing(state.budget, progress),
+  );
+
+  if (result.files.length === 0) {
+    vscode.window.showInformationMessage('All essential agent files already exist.');
+    return;
+  }
+
+  for (const f of result.files) {
+    const action = await vscode.window.showInformationMessage(
+      `Generated ${f.path} (${f.tokens} tokens). Save?`,
+      'Save', 'Preview', 'Skip',
+    );
+    if (action === 'Save' || action === 'Preview') {
+      if (action === 'Preview') {
+        const doc = await vscode.workspace.openTextDocument({ content: f.content, language: 'markdown' });
+        await vscode.window.showTextDocument(doc);
+        const confirm = await vscode.window.showInformationMessage(`Save ${f.path}?`, 'Save', 'Discard');
+        if (confirm !== 'Save') { continue; }
+      }
+      const ws = vscode.workspace.workspaceFolders?.[0];
+      if (ws) {
+        const uri = vscode.Uri.joinPath(ws.uri, f.path);
+        await vscode.workspace.fs.writeFile(uri, Buffer.from(f.content, 'utf8'));
+        vscode.window.showInformationMessage(`Saved ${f.path}`);
+      }
+    }
+  }
+  await analyzeWorkspace();
+}
+
+// ─── AI Generate Specific File ──────────────────────────────────────
+
+export async function aiGenerateFile(): Promise<void> {
+  if (!requireAi()) { return; }
+
+  const target = await vscode.window.showQuickPick(
+    ['CLAUDE.md', 'SKILL.md', 'todo.md', 'lessons.md', 'AGENTS.md'],
+    { title: 'Which file to generate?', placeHolder: 'Select target file' },
+  );
+  if (!target) { return; }
+
+  const instructions = await vscode.window.showInputBox({
+    prompt: `Custom instructions for ${target} generation (optional)`,
+    placeHolder: 'e.g., This is a Python FastAPI project with PostgreSQL...',
+  });
+
+  if (!state.budget) { await analyzeWorkspace(); }
+
+  const result = await vscode.window.withProgress(
+    { location: vscode.ProgressLocation.Notification, title: `AI generating ${target}...` },
+    async () => generator.generateFile(target as generator.GenerateTarget, state.budget, instructions || undefined),
+  );
+
+  for (const f of result.files) {
+    const doc = await vscode.workspace.openTextDocument({ content: f.content, language: 'markdown' });
+    await vscode.window.showTextDocument(doc);
+
+    const action = await vscode.window.showInformationMessage(
+      `Generated ${f.path} (${f.tokens} tokens, ${result.latencyMs}ms). Save?`,
+      'Save', 'Discard',
+    );
+    if (action === 'Save') {
+      const ws = vscode.workspace.workspaceFolders?.[0];
+      if (ws) {
+        const uri = vscode.Uri.joinPath(ws.uri, f.path);
+        await vscode.workspace.fs.writeFile(uri, Buffer.from(f.content, 'utf8'));
+        vscode.window.showInformationMessage(`Saved ${f.path}`);
+      }
+    }
+  }
+  await analyzeWorkspace();
+}
+
+// ─── AI Fix Current File ────────────────────────────────────────────
+
+export async function aiFixCurrentFile(): Promise<void> {
+  if (!requireAi()) { return; }
+
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) { vscode.window.showWarningMessage('Open a file to fix.'); return; }
+  if (!state.budget) { await analyzeWorkspace(); }
+  if (!state.budget) { return; }
+
+  const file = state.budget.allFiles.find(f => editor.document.uri.toString() === f.uri.toString());
+  if (!file) { vscode.window.showWarningMessage('Not an agent file.'); return; }
+
+  // First validate to get violations
+  const validation = await vscode.window.withProgress(
+    { location: vscode.ProgressLocation.Notification, title: `Validating ${file.relativePath}...` },
+    async () => validator.validateFile(file),
+  );
+
+  if (validation.violations.length === 0) {
+    vscode.window.showInformationMessage(`${file.relativePath}: No violations found (score: ${validation.score}/100).`);
+    return;
+  }
+
+  await aiFixWithViolations(file, validation.violations);
+}
+
+// ─── AI Detect Contradictions ───────────────────────────────────────
+
+export async function aiDetectContradictions(): Promise<void> {
+  if (!requireAi()) { return; }
+  if (!state.budget) { await analyzeWorkspace(); }
+  if (!state.budget) { return; }
+
+  const results = await vscode.window.withProgress(
+    { location: vscode.ProgressLocation.Notification, title: 'AI detecting semantic contradictions...', cancellable: false },
+    async (progress) => validator.detectContradictions(state.budget!, progress),
+  );
+
+  if (results.length === 0) {
+    vscode.window.showInformationMessage('✅ No semantic contradictions detected (Three-Body Problem: clear).');
+    return;
+  }
+
+  const lines = ['# Three-Body Problem — Semantic Contradictions', '',
+    `Found ${results.length} contradiction(s) between kernel and learning layers.`, ''];
+
+  for (const c of results) {
+    lines.push(`## ${c.subject} (confidence: ${(c.confidence * 100).toFixed(0)}%)`);
+    lines.push(`- **File A**: ${c.fileA}:${c.lineA + 1}`);
+    lines.push(`- **File B**: ${c.fileB}:${c.lineB + 1}`);
+    lines.push(`- **Explanation**: ${c.explanation}`);
+    lines.push(`- **Resolution**: ${c.resolution}`, '');
+  }
+
+  const doc = await vscode.workspace.openTextDocument({ content: lines.join('\n'), language: 'markdown' });
+  await vscode.window.showTextDocument(doc);
+}
+
+// ─── Internal: Fix with Violations ──────────────────────────────────
+
+async function aiFixWithViolations(file: AgentFile, violations: Violation[]): Promise<void> {
+  const result = await vscode.window.withProgress(
+    { location: vscode.ProgressLocation.Notification, title: `AI fixing ${file.relativePath} (${violations.length} violations)...` },
+    async () => generator.fixFileFromViolations(file, violations),
+  );
+
+  for (const f of result.files) {
+    const doc = await vscode.workspace.openTextDocument({ content: f.content, language: 'markdown' });
+    await vscode.window.showTextDocument(doc, f.isNew ? vscode.ViewColumn.Beside : vscode.ViewColumn.Active);
+
+    if (!f.isNew) {
+      const action = await vscode.window.showInformationMessage(
+        `Fixed ${f.path}. Apply changes?`, 'Apply', 'Keep Original',
+      );
+      if (action === 'Apply') {
+        const ws = vscode.workspace.workspaceFolders?.[0];
+        if (ws) {
+          const uri = vscode.Uri.joinPath(ws.uri, f.path);
+          await vscode.workspace.fs.writeFile(uri, Buffer.from(f.content, 'utf8'));
+          vscode.window.showInformationMessage(`Applied fix to ${f.path}`);
+        }
+      }
+    } else {
+      const ws = vscode.workspace.workspaceFolders?.[0];
+      if (ws) {
+        const uri = vscode.Uri.joinPath(ws.uri, f.path);
+        try { await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(ws.uri, ...f.path.split('/').slice(0, -1))); } catch {}
+        await vscode.workspace.fs.writeFile(uri, Buffer.from(f.content, 'utf8'));
+        vscode.window.showInformationMessage(`Created ${f.path}`);
+      }
+    }
+  }
+  await analyzeWorkspace();
 }

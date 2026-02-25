@@ -173,6 +173,36 @@
         "command": "clawdcontext.aiSecurityReview",
         "title": "ClawdContext AI: Security Review",
         "icon": "$(shield)"
+      },
+      {
+        "command": "clawdcontext.aiValidate",
+        "title": "ClawdContext AI: Validate Agent Files",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "clawdcontext.aiValidateFile",
+        "title": "ClawdContext AI: Validate This File",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "clawdcontext.aiGenerate",
+        "title": "ClawdContext AI: Generate Missing Files",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "clawdcontext.aiGenerateFile",
+        "title": "ClawdContext AI: Generate / Regenerate File",
+        "icon": "$(file-add)"
+      },
+      {
+        "command": "clawdcontext.aiFix",
+        "title": "ClawdContext AI: Fix Violations",
+        "icon": "$(wrench)"
+      },
+      {
+        "command": "clawdcontext.aiContradictions",
+        "title": "ClawdContext AI: Detect Contradictions",
+        "icon": "$(warning)"
       }
     ],
     "viewsContainers": {
@@ -209,17 +239,229 @@
         "contents": "No Markdown OS files detected.\n[Scaffold Templates](command:clawdcontext.scaffoldMarkdownOS)\n[Analyze Workspace](command:clawdcontext.analyzeWorkspace)"
       }
     ],
+    "submenus": [
+      {
+        "id": "clawdcontext.submenu",
+        "label": "ClawdContext"
+      },
+      {
+        "id": "clawdcontext.aiSubmenu",
+        "label": "ClawdContext AI"
+      }
+    ],
     "menus": {
+      "editor/title": [
+        {
+          "command": "clawdcontext.aiValidateFile",
+          "when": "resourceExtname == .md && clawdcontext:aiEnabled",
+          "group": "navigation@1"
+        },
+        {
+          "command": "clawdcontext.aiFix",
+          "when": "resourceExtname == .md && clawdcontext:aiEnabled",
+          "group": "navigation@2"
+        },
+        {
+          "command": "clawdcontext.aiSecurityReview",
+          "when": "resourceExtname == .md && clawdcontext:aiEnabled",
+          "group": "navigation@3"
+        },
+        {
+          "command": "clawdcontext.showDashboard",
+          "when": "resourceExtname == .md",
+          "group": "navigation@4"
+        }
+      ],
+      "editor/context": [
+        {
+          "submenu": "clawdcontext.submenu",
+          "when": "resourceExtname == .md",
+          "group": "clawdcontext@1"
+        }
+      ],
+      "clawdcontext.submenu": [
+        {
+          "command": "clawdcontext.analyzeWorkspace",
+          "group": "1_analyze@1"
+        },
+        {
+          "command": "clawdcontext.lintMdFiles",
+          "group": "1_analyze@2"
+        },
+        {
+          "command": "clawdcontext.showDashboard",
+          "group": "1_analyze@3"
+        },
+        {
+          "command": "clawdcontext.cerDiff",
+          "group": "1_analyze@4"
+        },
+        {
+          "command": "clawdcontext.extractProcedure",
+          "group": "2_refactor@1"
+        },
+        {
+          "command": "clawdcontext.moveToLessons",
+          "group": "2_refactor@2"
+        },
+        {
+          "command": "clawdcontext.analyzeBloat",
+          "group": "2_refactor@3"
+        },
+        {
+          "submenu": "clawdcontext.aiSubmenu",
+          "when": "clawdcontext:aiEnabled",
+          "group": "3_ai@1"
+        }
+      ],
+      "clawdcontext.aiSubmenu": [
+        {
+          "command": "clawdcontext.aiValidateFile",
+          "group": "1_validate@1"
+        },
+        {
+          "command": "clawdcontext.aiFix",
+          "group": "1_validate@2"
+        },
+        {
+          "command": "clawdcontext.aiSecurityReview",
+          "group": "1_validate@3"
+        },
+        {
+          "command": "clawdcontext.aiReviewConfig",
+          "group": "2_review@1"
+        },
+        {
+          "command": "clawdcontext.aiSuggestRefactor",
+          "group": "2_review@2"
+        },
+        {
+          "command": "clawdcontext.aiExplainDiagnostic",
+          "group": "2_review@3"
+        },
+        {
+          "command": "clawdcontext.aiContradictions",
+          "group": "2_review@4"
+        },
+        {
+          "command": "clawdcontext.aiGenerate",
+          "group": "3_generate@1"
+        },
+        {
+          "command": "clawdcontext.aiGenerateFile",
+          "group": "3_generate@2"
+        }
+      ],
+      "explorer/context": [
+        {
+          "submenu": "clawdcontext.submenu",
+          "when": "resourceExtname == .md",
+          "group": "clawdcontext@1"
+        },
+        {
+          "command": "clawdcontext.scaffoldMarkdownOS",
+          "when": "explorerResourceIsFolder",
+          "group": "clawdcontext@2"
+        }
+      ],
       "view/title": [
         {
           "command": "clawdcontext.refreshTree",
           "when": "view =~ /clawdcontext/",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "clawdcontext.showDashboard",
+          "when": "view =~ /clawdcontext/",
+          "group": "navigation@2"
+        },
+        {
+          "command": "clawdcontext.exportDashboard",
+          "when": "view =~ /clawdcontext/",
+          "group": "navigation@3"
+        },
+        {
+          "command": "clawdcontext.cerDiff",
           "when": "view == clawdcontext.health",
-          "group": "navigation"
+          "group": "navigation@4"
+        },
+        {
+          "command": "clawdcontext.applyPreset",
+          "when": "view == clawdcontext.health",
+          "group": "overflow@1"
+        },
+        {
+          "command": "clawdcontext.aiValidate",
+          "when": "view == clawdcontext.layers && clawdcontext:aiEnabled",
+          "group": "overflow@2"
+        },
+        {
+          "command": "clawdcontext.aiGenerate",
+          "when": "view == clawdcontext.layers && clawdcontext:aiEnabled",
+          "group": "overflow@3"
+        },
+        {
+          "command": "clawdcontext.aiContradictions",
+          "when": "view == clawdcontext.lessons && clawdcontext:aiEnabled",
+          "group": "overflow@4"
+        },
+        {
+          "command": "clawdcontext.scaffoldMarkdownOS",
+          "when": "view == clawdcontext.layers",
+          "group": "overflow@5"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "clawdcontext.aiValidateFile",
+          "when": "view == clawdcontext.layers && viewItem == agentFile && clawdcontext:aiEnabled",
+          "group": "inline@1"
+        },
+        {
+          "command": "clawdcontext.aiSecurityReview",
+          "when": "view == clawdcontext.layers && viewItem == agentFile && clawdcontext:aiEnabled",
+          "group": "inline@2"
+        },
+        {
+          "command": "clawdcontext.analyzeBloat",
+          "when": "view == clawdcontext.layers && viewItem == layer",
+          "group": "1_actions@1"
+        },
+        {
+          "command": "clawdcontext.pruneLessons",
+          "when": "view == clawdcontext.lessons",
+          "group": "1_actions@1"
+        },
+        {
+          "command": "clawdcontext.promoteLessons",
+          "when": "view == clawdcontext.lessons",
+          "group": "1_actions@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "clawdcontext.aiValidate",
+          "when": "clawdcontext:aiEnabled"
+        },
+        {
+          "command": "clawdcontext.aiValidateFile",
+          "when": "clawdcontext:aiEnabled"
+        },
+        {
+          "command": "clawdcontext.aiGenerate",
+          "when": "clawdcontext:aiEnabled"
+        },
+        {
+          "command": "clawdcontext.aiGenerateFile",
+          "when": "clawdcontext:aiEnabled"
+        },
+        {
+          "command": "clawdcontext.aiFix",
+          "when": "clawdcontext:aiEnabled"
+        },
+        {
+          "command": "clawdcontext.aiContradictions",
+          "when": "clawdcontext:aiEnabled"
         }
       ]
     },
@@ -300,15 +542,17 @@
         "clawdcontext.ai.provider": {
           "type": "string",
           "default": "none",
-          "enum": ["none", "openai", "anthropic", "ollama"],
+          "enum": ["none", "openai", "anthropic", "azure-openai", "ollama", "deepseek"],
           "enumDescriptions": [
             "AI features disabled (default)",
             "OpenAI (GPT-4o, GPT-4o-mini, etc.)",
             "Anthropic (Claude Sonnet, Opus, Haiku)",
-            "Ollama (local models — no API key needed)"
+            "Azure OpenAI Service (enterprise deployments)",
+            "Ollama (local models — no API key needed)",
+            "DeepSeek (DeepSeek-Chat, DeepSeek-Coder)"
           ],
           "description": "AI provider for optional intelligent features. Set to 'none' to keep the extension fully offline.",
-          "markdownDescription": "AI provider for optional intelligent features.\n\n- `none` — AI disabled (default, fully offline)\n- `openai` — [OpenAI API](https://platform.openai.com/)\n- `anthropic` — [Anthropic API](https://console.anthropic.com/)\n- `ollama` — [Ollama](https://ollama.ai/) (local, no API key needed)"
+          "markdownDescription": "AI provider for optional intelligent features.\n\n- `none` — AI disabled (default, fully offline)\n- `openai` — [OpenAI API](https://platform.openai.com/)\n- `anthropic` — [Anthropic API](https://console.anthropic.com/)\n- `azure-openai` — [Azure OpenAI](https://azure.microsoft.com/products/ai-services/openai-service) (enterprise)\n- `ollama` — [Ollama](https://ollama.ai/) (local, no API key needed)\n- `deepseek` — [DeepSeek](https://platform.deepseek.com/) (affordable, high quality)"
         },
         "clawdcontext.ai.apiKey": {
           "type": "string",
@@ -319,8 +563,8 @@
         "clawdcontext.ai.model": {
           "type": "string",
           "default": "",
-          "description": "Model name override. Leave empty for defaults: gpt-4o-mini (OpenAI), claude-sonnet-4-20250514 (Anthropic), llama3.2 (Ollama).",
-          "markdownDescription": "Model name override. Leave empty for smart defaults:\n\n| Provider | Default Model |\n|---|---|\n| OpenAI | `gpt-4o-mini` |\n| Anthropic | `claude-sonnet-4-20250514` |\n| Ollama | `llama3.2` |"
+          "description": "Model name override. Leave empty for defaults: gpt-4o (OpenAI/Azure), claude-sonnet-4-20250514 (Anthropic), llama3.2 (Ollama), deepseek-chat (DeepSeek).",
+          "markdownDescription": "Model name override. Leave empty for smart defaults:\n\n| Provider | Default Model |\n|---|---|\n| OpenAI | `gpt-4o` |\n| Anthropic | `claude-sonnet-4-20250514` |\n| Azure OpenAI | `gpt-4o` |\n| Ollama | `llama3.2` |\n| DeepSeek | `deepseek-chat` |"
         },
         "clawdcontext.ai.baseUrl": {
           "type": "string",
@@ -345,6 +589,55 @@
           "default": 30000,
           "description": "AI request timeout in milliseconds. Increase for large prompts or slow connections.",
           "markdownDescription": "AI request timeout in milliseconds.\n\n- Default: `30000` (30 seconds)\n- Ollama with large models: consider `60000`+\n- Enterprise proxies: consider `45000`+"
+        },
+        "clawdcontext.ai.maxTokens": {
+          "type": "number",
+          "default": 4000,
+          "description": "Maximum tokens in AI responses. Higher values give more detailed responses but cost more.",
+          "markdownDescription": "Maximum tokens in AI responses.\n\n- Default: `4000`\n- For generation tasks: `8000`+\n- For quick validations: `2000` is sufficient"
+        },
+        "clawdcontext.ai.temperature": {
+          "type": "number",
+          "default": 0.3,
+          "minimum": 0,
+          "maximum": 2,
+          "description": "AI response creativity (0 = deterministic, 1 = creative, 2 = very creative). Recommended: 0.3 for analysis, 0.7 for generation.",
+          "markdownDescription": "AI response temperature.\n\n- `0.0` — Deterministic, consistent\n- `0.3` — Low creativity (recommended for validation/analysis)\n- `0.7` — Moderate creativity (good for generation)\n- `1.0`+ — High creativity (experimental)"
+        },
+        "clawdcontext.ai.azureDeployment": {
+          "type": "string",
+          "default": "",
+          "description": "Azure OpenAI deployment name. Required when provider is 'azure-openai'.",
+          "markdownDescription": "Azure OpenAI deployment name.\n\nRequired when `clawdcontext.ai.provider` is `azure-openai`.\n\nThis is the deployment name you created in Azure AI Studio, not the model name.\n\nExample: `my-gpt4o-deployment`"
+        },
+        "clawdcontext.ai.azureApiVersion": {
+          "type": "string",
+          "default": "2024-12-01-preview",
+          "description": "Azure OpenAI API version. Only used with 'azure-openai' provider.",
+          "markdownDescription": "Azure OpenAI API version.\n\nDefault: `2024-12-01-preview`\n\n[Available versions](https://learn.microsoft.com/azure/ai-services/openai/reference)"
+        },
+        "clawdcontext.ai.certPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to PEM client certificate for mTLS authentication. Used with enterprise proxies requiring mutual TLS.",
+          "markdownDescription": "Path to PEM client certificate for mTLS.\n\nUse with `clawdcontext.ai.keyPath` for mutual TLS authentication.\n\nFor PFX/P12 format, use `clawdcontext.ai.pfxPath` instead."
+        },
+        "clawdcontext.ai.keyPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to PEM private key for mTLS authentication. Paired with certPath.",
+          "markdownDescription": "Path to PEM private key for mTLS.\n\nMust be paired with `clawdcontext.ai.certPath`."
+        },
+        "clawdcontext.ai.pfxPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to PFX/P12 certificate bundle for mTLS. Alternative to separate cert+key PEM files.",
+          "markdownDescription": "Path to PFX/P12 certificate bundle for mTLS.\n\nAlternative to `certPath` + `keyPath` when you have a combined `.pfx` or `.p12` file.\n\nIf password-protected, set `clawdcontext.ai.pfxPassphrase`."
+        },
+        "clawdcontext.ai.pfxPassphrase": {
+          "type": "string",
+          "default": "",
+          "description": "Passphrase for the PFX/P12 certificate. Only needed if your PFX file is password-protected."
         }
       }
     },
@@ -389,6 +682,60 @@
           "SKILL.md"
         ],
         "configuration": "./language-configuration.json"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "clawdcontext.gettingStarted",
+        "title": "Get Started with ClawdContext",
+        "description": "Set up your AI agent's Markdown OS for optimal context efficiency.",
+        "steps": [
+          {
+            "id": "analyzeWorkspace",
+            "title": "Analyze Your Workspace",
+            "description": "Scan your project for CLAUDE.md, SKILL.md, lessons.md, and other Markdown OS files.\n\n[Analyze Workspace](command:clawdcontext.analyzeWorkspace)",
+            "media": {
+              "markdown": "media/walkthrough/analyze.md"
+            },
+            "completionEvents": ["onCommand:clawdcontext.analyzeWorkspace"]
+          },
+          {
+            "id": "openDashboard",
+            "title": "Open the CER Dashboard",
+            "description": "View your Context Efficiency Ratio, layer distribution, positional attention map, and security findings.\n\n[Open Dashboard](command:clawdcontext.showDashboard)",
+            "media": {
+              "markdown": "media/walkthrough/dashboard.md"
+            },
+            "completionEvents": ["onCommand:clawdcontext.showDashboard"]
+          },
+          {
+            "id": "scaffoldFiles",
+            "title": "Scaffold Markdown OS Templates",
+            "description": "Generate starter templates for CLAUDE.md, SKILL.md, todo.md, and lessons.md.\n\n[Scaffold Templates](command:clawdcontext.scaffoldMarkdownOS)",
+            "media": {
+              "markdown": "media/walkthrough/scaffold.md"
+            },
+            "completionEvents": ["onCommand:clawdcontext.scaffoldMarkdownOS"]
+          },
+          {
+            "id": "configureAi",
+            "title": "Enable AI Features (Optional)",
+            "description": "Connect an AI provider (OpenAI, Anthropic, Azure, Ollama, DeepSeek) for intelligent validation, generation, and contradiction detection.\n\n[Configure AI](command:workbench.action.openSettings?%22clawdcontext.ai.provider%22)",
+            "media": {
+              "markdown": "media/walkthrough/ai-setup.md"
+            },
+            "completionEvents": ["onSettingChanged:clawdcontext.ai.provider"]
+          },
+          {
+            "id": "securityScan",
+            "title": "Run Security Scan",
+            "description": "Lint your SKILL.md files for prompt injection, credential exposure, and supply-chain risks.\n\n[Run Lint](command:clawdcontext.lintMdFiles)",
+            "media": {
+              "markdown": "media/walkthrough/security.md"
+            },
+            "completionEvents": ["onCommand:clawdcontext.lintMdFiles"]
+          }
+        ]
       }
     ]
   },
