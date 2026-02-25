@@ -1,0 +1,61 @@
+name: Feature request
+description: Propose a new capability, diagnostic, code action, or UX improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Proposals are strongest when they describe the problem, not just the implementation.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      placeholder: What workflow pain exists today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      placeholder: What should ClawdContext do?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Product area
+      options:
+        - CER / token analysis
+        - Diagnostics / mdcc checks
+        - Lessons governance
+        - SKILL.md security scanner
+        - Code actions / refactors
+        - Dashboard / UI
+        - Sidebar / tree views
+        - Templates / scaffold
+        - Performance
+        - Docs / onboarding
+        - Publishing / marketplace
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Expected impact
+      options:
+        - High (core workflow / major differentiator)
+        - Medium (quality-of-life)
+        - Low (nice to have)
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence / references (optional)
+      description: Articles, research, competitor examples, or screenshots.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered (optional)

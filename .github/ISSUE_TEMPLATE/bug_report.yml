@@ -1,0 +1,82 @@
+name: Bug report
+description: Report a bug, false positive, false negative, or broken extension behavior
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting an issue. Please include enough detail to reproduce it.
+  - type: input
+    id: version
+    attributes:
+      label: ClawdContext version
+      placeholder: "0.2.0"
+    validations:
+      required: true
+  - type: input
+    id: vscode_version
+    attributes:
+      label: VS Code version
+      placeholder: "1.95.x"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Windows
+        - Linux
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: bug_type
+    attributes:
+      label: Bug type
+      options:
+        - Crash / exception
+        - Wrong diagnostic (false positive)
+        - Missed diagnostic (false negative)
+        - Code action/refactor issue
+        - Dashboard/UI issue
+        - Packaging/install issue
+        - Performance issue
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open workspace with ...
+        2. Run "ClawdContext: Analyze Workspace"
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Sample markdown files / snippets (sanitized)
+      description: Paste a minimal reproducible example if possible.
+      render: markdown
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Paste stack traces or attach screenshots.

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions (usage / strategy / roadmap)
+    url: https://github.com/yaamwebsolutions/clawdcontext4vscode/discussions
+    about: Use Discussions for questions, design debates, and roadmap conversations.
+  - name: Security report (private)
+    url: https://github.com/yaamwebsolutions/clawdcontext4vscode/security/advisories
+    about: Report suspected vulnerabilities privately (preferred over public issues).

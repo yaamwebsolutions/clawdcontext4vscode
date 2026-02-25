@@ -1,0 +1,274 @@
+{
+  "name": "clawdcontext",
+  "displayName": "ClawdContext — Markdown OS for AI Agents",
+  "description": "Context budget analyzer, .md linter, lessons governance, and CER dashboard for AI coding agent workflows (CLAUDE.md, SKILL.md, todo.md, lessons.md, hooks).",
+  "version": "0.2.1",
+  "publisher": "clawdcontext",
+  "author": {
+    "name": "Claudisiar"
+  },
+  "license": "MIT",
+  "homepage": "https://clawdcontext.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yaamwebsolutions/clawdcontext4vscode"
+  },
+  "bugs": {
+    "url": "https://github.com/yaamwebsolutions/clawdcontext4vscode/issues"
+  },
+  "qna": "https://github.com/yaamwebsolutions/clawdcontext4vscode/discussions",
+  "pricing": "Free",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "galleryBanner": {
+    "color": "#0f172a",
+    "theme": "dark"
+  },
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Read-only analysis works in untrusted workspaces. File-generating and refactor commands should be used in trusted workspaces."
+    }
+  },
+  "categories": [
+    "Linters",
+    "Other",
+    "Visualization",
+    "Testing"
+  ],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "agents",
+    "markdown",
+    "CLAUDE.md",
+    "SKILL.md",
+    "lessons.md",
+    "context-window",
+    "ai-agents",
+    "openclaw",
+    "clawdbot",
+    "security-scanner",
+    "lost-in-the-middle",
+    "CER"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/CLAUDE.md",
+    "workspaceContains:**/AGENTS.md",
+    "workspaceContains:**/.claude/**",
+    "workspaceContains:**/SKILL.md",
+    "workspaceContains:**/lessons.md",
+    "workspaceContains:**/todo.md"
+  ],
+  "main": "./dist/extension.js",
+  "icon": "media/icon.png",
+  "contributes": {
+    "commands": [
+      {
+        "command": "clawdcontext.analyzeWorkspace",
+        "title": "ClawdContext: Analyze Workspace",
+        "icon": "$(search)"
+      },
+      {
+        "command": "clawdcontext.showDashboard",
+        "title": "ClawdContext: Open Dashboard",
+        "icon": "$(dashboard)"
+      },
+      {
+        "command": "clawdcontext.pruneLessons",
+        "title": "ClawdContext: Prune Stale Lessons",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "clawdcontext.promoteLessons",
+        "title": "ClawdContext: Review Promotion Candidates",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "clawdcontext.lintMdFiles",
+        "title": "ClawdContext: Lint .md Agent Files",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "clawdcontext.generateReport",
+        "title": "ClawdContext: Generate Context Health Report",
+        "icon": "$(output)"
+      },
+      {
+        "command": "clawdcontext.scaffoldMarkdownOS",
+        "title": "ClawdContext: Scaffold Markdown OS Templates",
+        "icon": "$(file-add)"
+      },
+      {
+        "command": "clawdcontext.refreshTree",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "clawdcontext.extractProcedure",
+        "title": "ClawdContext: Extract Procedure to SKILL.md"
+      },
+      {
+        "command": "clawdcontext.moveToLessons",
+        "title": "ClawdContext: Move Heuristic to lessons.md"
+      },
+      {
+        "command": "clawdcontext.archiveDeprecated",
+        "title": "ClawdContext: Archive Deprecated Entries"
+      },
+      {
+        "command": "clawdcontext.analyzeBloat",
+        "title": "ClawdContext: Analyze Kernel Bloat"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "clawdcontext-sidebar",
+          "title": "ClawdContext",
+          "icon": "media/sidebar-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "clawdcontext-sidebar": [
+        {
+          "id": "clawdcontext.layers",
+          "name": "Markdown OS Layers",
+          "type": "tree"
+        },
+        {
+          "id": "clawdcontext.health",
+          "name": "Context Health",
+          "type": "tree"
+        },
+        {
+          "id": "clawdcontext.lessons",
+          "name": "Lessons Governance",
+          "type": "tree"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "clawdcontext.layers",
+        "contents": "No Markdown OS files detected.\n[Scaffold Templates](command:clawdcontext.scaffoldMarkdownOS)\n[Analyze Workspace](command:clawdcontext.analyzeWorkspace)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "clawdcontext.refreshTree",
+          "when": "view =~ /clawdcontext/",
+          "group": "navigation"
+        },
+        {
+          "command": "clawdcontext.showDashboard",
+          "when": "view == clawdcontext.health",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ClawdContext",
+      "properties": {
+        "clawdcontext.tokenBudget": {
+          "type": "number",
+          "default": 200000,
+          "description": "Total context window size in tokens (e.g. 200000 for Claude Sonnet)"
+        },
+        "clawdcontext.cerWarningThreshold": {
+          "type": "number",
+          "default": 0.4,
+          "description": "CER threshold below which a warning is shown (0.0 - 1.0)"
+        },
+        "clawdcontext.cerCriticalThreshold": {
+          "type": "number",
+          "default": 0.2,
+          "description": "CER threshold below which a critical alert is shown (0.0 - 1.0)"
+        },
+        "clawdcontext.lessonsTtlDays": {
+          "type": "number",
+          "default": 60,
+          "description": "TTL in days for local-heuristic lessons before staleness warning"
+        },
+        "clawdcontext.lessonsMaxEntries": {
+          "type": "number",
+          "default": 50,
+          "description": "Maximum recommended lessons before bloat warning"
+        },
+        "clawdcontext.alwaysLoadedFiles": {
+          "type": "array",
+          "default": ["CLAUDE.md", "AGENTS.md", ".claude/settings.json"],
+          "description": "Files always loaded into context (counted toward CER)"
+        },
+        "clawdcontext.onDemandPatterns": {
+          "type": "array",
+          "default": ["**/SKILL.md", "**/skills/**"],
+          "description": "Glob patterns for on-demand files (not counted as always-loaded)"
+        },
+        "clawdcontext.enableCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show inline CodeLens on lessons.md entries"
+        },
+        "clawdcontext.enableStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show CER and context health in the status bar"
+        }
+      }
+    },
+    "colors": [
+      {
+        "id": "clawdcontext.cerOptimal",
+        "description": "CER Optimal indicator color",
+        "defaults": { "dark": "#059669", "light": "#059669" }
+      },
+      {
+        "id": "clawdcontext.cerWarning",
+        "description": "CER Warning indicator color",
+        "defaults": { "dark": "#D97706", "light": "#D97706" }
+      },
+      {
+        "id": "clawdcontext.cerCritical",
+        "description": "CER Critical indicator color",
+        "defaults": { "dark": "#DC2626", "light": "#DC2626" }
+      }
+    ],
+    "languages": [
+      {
+        "id": "markdown-agent",
+        "aliases": ["Agent Markdown"],
+        "extensions": [],
+        "filenames": ["CLAUDE.md", "AGENTS.md", "lessons.md", "todo.md", "SKILL.md"],
+        "configuration": "./language-configuration.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --max-warnings=0",
+    "check": "npm run compile && npm run lint && npm test",
+    "test": "node ./dist/test/smoke.js",
+    "package": "vsce package --no-yarn",
+    "package:ci": "npm run compile && npm test && vsce package --no-yarn",
+    "publish": "vsce publish --no-yarn"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.96.0",
+    "@types/node": "^22.0.0",
+    "@eslint/js": "^9.0.0",
+    "typescript-eslint": "^8.0.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.7.0",
+    "@vscode/vsce": "^3.0.0"
+  },
+  "dependencies": {}
+}
