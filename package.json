@@ -1,7 +1,7 @@
 {
   "name": "clawdcontext",
   "displayName": "ClawdContext — Markdown OS for AI Agents",
-  "description": "Context budget analyzer, .md linter, lessons governance, and CER dashboard for AI coding agent workflows (CLAUDE.md, SKILL.md, todo.md, lessons.md, hooks).",
+  "description": "VS Code extension for AI coding agent Markdown systems: CER dashboard, mdcc-style diagnostics, lessons governance, SKILL.md security scanning, and quick-fix refactors.",
   "version": "0.3.0",
   "publisher": "clawdcontext",
   "author": {
@@ -36,23 +36,33 @@
   },
   "categories": [
     "Linters",
-    "Other",
     "Visualization",
-    "Testing"
+    "Machine Learning",
+    "Other"
   ],
   "keywords": [
+    "vscode",
+    "vscode-extension",
     "claude",
     "claude-code",
     "agents",
+    "agentic-coding",
     "markdown",
+    "markdown-os",
     "CLAUDE.md",
     "SKILL.md",
     "lessons.md",
+    "context-engineering",
+    "context-management",
     "context-window",
+    "llm",
+    "prompt-engineering",
     "ai-agents",
     "openclaw",
     "clawdbot",
     "security-scanner",
+    "ai-security",
+    "developer-tools",
     "lost-in-the-middle",
     "CER"
   ],

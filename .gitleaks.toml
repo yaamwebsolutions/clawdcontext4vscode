@@ -1,0 +1,18 @@
+title = "ClawdContext gitleaks config"
+
+[allowlist]
+description = "Allow placeholder examples and generated metadata that are not secrets"
+paths = [
+  '''^CHANGELOG\.md$''',
+  '''^README\.md$''',
+  '''^ROADMAP\.md$''',
+  '''^SUPPORT\.md$''',
+  '''^CONTRIBUTING\.md$'''
+]
+
+regexes = [
+  '''AKIAIOSFODNN7EXAMPLE''',
+  '''example(_|-)?token''',
+  '''VSCE_PAT''',
+  '''OVSX_PAT'''
+]

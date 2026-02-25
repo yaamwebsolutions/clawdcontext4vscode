@@ -8,6 +8,10 @@ coverage/**
 dist/test/**
 *.tsbuildinfo
 *.vsix
+.gitignore
+.gitleaks.toml
+.nvmrc
+.node-version
 .editorconfig
 eslint.config.mjs
 tsconfig.json
@@ -19,6 +23,7 @@ PUBLISHING.md
 ROADMAP.md
 SECURITY.md
 SUPPORT.md
+MARKETPLACE_READINESS.md
 
 !dist/**
 !media/**

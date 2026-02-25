@@ -4,6 +4,7 @@
 [![Installs](https://img.shields.io/visual-studio-marketplace/i/clawdcontext.clawdcontext?logo=visual-studio-code&color=059669)](https://marketplace.visualstudio.com/items?itemName=clawdcontext.clawdcontext)
 [![License: MIT](https://img.shields.io/github/license/yaamwebsolutions/clawdcontext4vscode?color=blue)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/yaamwebsolutions/clawdcontext4vscode/ci.yml?branch=main&label=CI&logo=github)](https://github.com/yaamwebsolutions/clawdcontext4vscode/actions/workflows/ci.yml)
+[![Secret Scan](https://img.shields.io/github/actions/workflow/status/yaamwebsolutions/clawdcontext4vscode/secret-scan.yml?branch=main&label=Secret%20Scan&logo=github)](https://github.com/yaamwebsolutions/clawdcontext4vscode/actions/workflows/secret-scan.yml)
 [![GitHub Stars](https://img.shields.io/github/stars/yaamwebsolutions/clawdcontext4vscode?style=social)](https://github.com/yaamwebsolutions/clawdcontext4vscode)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -15,6 +16,10 @@
   <a href="https://marketplace.visualstudio.com/items?itemName=clawdcontext.clawdcontext">
     <img src="https://img.shields.io/badge/Install_from_Marketplace-0078d7?style=for-the-badge&logo=visual-studio-code&logoColor=white" alt="Install from Marketplace" />
   </a>
+</p>
+
+<p align="center">
+  <img src="media/demo.png" alt="ClawdContext in action — sidebar, diagnostics, and CER dashboard" width="640" />
 </p>
 
 ---
@@ -139,7 +144,7 @@ Outputs:
 
 ClawdContext does not stop at warnings; it provides refactors.
 
-Examples of code actions in v0.2.0:
+Shipped code actions:
 
 - extract procedure from `CLAUDE.md` → `skills/<name>/SKILL.md`
 - move temporal heuristic from kernel → `lessons.md`
@@ -313,10 +318,11 @@ ClawdContext is not:
 - a full policy engine
 - a guarantee that agent behavior is secure by text alone
 
-## Development (local)
+## Development
 
 ```bash
-cd <clawdcontext-extension-repo>
+git clone https://github.com/yaamwebsolutions/clawdcontext4vscode.git
+cd clawdcontext4vscode
 npm install
 npm run compile
 ```
@@ -328,9 +334,9 @@ Then press `F5` in VS Code to launch the Extension Development Host.
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes
+4. Push to the branch
 5. Open a Pull Request against `develop`
 
 **Good First Issues:** [Filter by label](https://github.com/yaamwebsolutions/clawdcontext4vscode/labels/good%20first%20issue)
@@ -356,13 +362,8 @@ See also:
 
 [MIT](LICENSE) — see LICENSE for details.
 
-## Closing Thesis
-
-The future of AI coding is not just better prompting.
-It is better orchestration, better memory hygiene, and better separation of concerns — with Markdown used deliberately, not dumped indiscriminately.
-
 ---
 
-**Built with precision by [Yaam Web Solutions](https://clawdcontext.com)**
+**[Yaam Web Solutions](https://clawdcontext.com)**
 
 [Install](https://marketplace.visualstudio.com/items?itemName=clawdcontext.clawdcontext) · [Report Issues](https://github.com/yaamwebsolutions/clawdcontext4vscode/issues) · [Discussions](https://github.com/yaamwebsolutions/clawdcontext4vscode/discussions)
