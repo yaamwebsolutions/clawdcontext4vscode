@@ -140,7 +140,9 @@ function renderSecurityTable(lintResult: LintResult | null): string {
 
   const rows = reports.map(r => {
     const c = r.verdict === 'clean' ? '#059669' : r.verdict === 'suspicious' ? '#D97706' : '#DC2626';
-    return `<tr><td>${r.file.relativePath}</td><td style="color:${c};font-weight:600">${r.score}/100</td><td style="color:${c}">${r.verdict.toUpperCase()}</td><td>${r.findings.length}</td></tr>`;
+    const activeCount = r.findings.filter(f => !f.suppressed).length;
+    const suppLabel = r.suppressedCount > 0 ? ` <span style="color:var(--muted);font-weight:normal;font-size:11px">(${r.suppressedCount} suppressed)</span>` : '';
+    return `<tr><td>${r.file.relativePath}</td><td style="color:${c};font-weight:600">${r.score}/100</td><td style="color:${c}">${r.verdict.toUpperCase()}</td><td>${activeCount}${suppLabel}</td></tr>`;
   }).join('\n');
 
   return `<div class="card"><h2>🔒 Security Scan</h2>

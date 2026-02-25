@@ -237,6 +237,25 @@
           "type": "boolean",
           "default": true,
           "description": "Show CER and context health in the status bar"
+        },
+        "clawdcontext.securityAllowlist": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Security rule codes to suppress (e.g. [\"SEC_EXEC_SHELL\", \"SEC_CRED_ENV\"]). Use for first-party skills with legitimate shell commands or env vars.",
+          "markdownDescription": "Security rule codes to suppress entirely. Available codes:\n- `SEC_EXFIL_FETCH` — HTTP fetch to external URLs\n- `SEC_EXFIL_DNS` — DNS exfiltration\n- `SEC_INJECT_HIDDEN` — Encoded injection\n- `SEC_INJECT_ROLE` — Role override\n- `SEC_INJECT_DELIMITER` — Delimiter manipulation\n- `SEC_CRED_ENV` — Env var access\n- `SEC_CRED_FILE` — Sensitive file access\n- `SEC_EXEC_SHELL` — Shell commands\n- `SEC_EXEC_EVAL` — Dynamic eval\n- `SEC_PERSIST` — Persistence\n- `SEC_STEALTH_COMMENTS` — Hidden comments\n- `SEC_OBFUSC` — Code obfuscation\n- `SEC_RECON` — System reconnaissance"
+        },
+        "clawdcontext.trustedDomains": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Domains to trust in URL pattern matching (e.g. [\"clawdcontext.com\", \"github.com\"]). URLs matching these domains won't trigger SEC_EXFIL_FETCH.",
+          "markdownDescription": "Domains to trust for URL-based security patterns. URLs containing these domains are excluded from `SEC_EXFIL_FETCH` findings.\n\nExample: `[\"mycompany.com\", \"github.com\"]`"
+        },
+        "clawdcontext.securityCodeBlockAware": {
+          "type": "boolean",
+          "default": true,
+          "description": "Suppress security findings inside markdown fenced code blocks (``` ... ```). These are documentation examples, not executable threats."
         }
       }
     },

@@ -61,11 +61,15 @@ export async function lintMdFiles(): Promise<void> {
   await analyzeWorkspace();
   if (state.budget && state.lintResult) {
     const secFindings = state.lintResult.securityReports.reduce(
-      (sum, r) => sum + r.findings.length, 0,
+      (sum, r) => sum + r.findings.filter(f => !f.suppressed).length, 0,
     );
+    const secSuppressed = state.lintResult.securityReports.reduce(
+      (sum, r) => sum + r.suppressedCount, 0,
+    );
+    const suppLabel = secSuppressed > 0 ? ` (${secSuppressed} suppressed)` : '';
     vscode.window.showInformationMessage(
       `ClawdContext: ${state.budget.allFiles.length} files. ` +
-      `Security: ${secFindings} findings. ` +
+      `Security: ${secFindings} findings${suppLabel}. ` +
       `Positional: ${state.lintResult.positionalWarnings} warnings.`,
     );
   }
