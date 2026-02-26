@@ -3,6 +3,7 @@ import type { ContextBudget } from '../analyzers/tokenAnalyzer';
 import { analyzePositionalAttention } from '../analyzers/tokenAnalyzer';
 import type { LintResult } from '../analyzers/diagnosticsProvider';
 import { state } from './analyzeWorkspace';
+import { isAiEnabled, getAiConfig, getProviderLabel } from '../ai';
 
 /**
  * Open the CER dashboard webview panel.
@@ -21,6 +22,44 @@ export function showDashboard(): void {
   );
 
   panel.webview.html = getDashboardHtml(state.budget, state.lintResult);
+
+  // Handle interactive button messages from webview
+  panel.webview.onDidReceiveMessage(
+    async (message: { command: string }) => {
+      switch (message.command) {
+        case 'exportDashboard':
+          vscode.commands.executeCommand('clawdcontext.exportDashboard');
+          break;
+        case 'cerDiff':
+          vscode.commands.executeCommand('clawdcontext.cerDiff');
+          break;
+        case 'applyPreset':
+          vscode.commands.executeCommand('clawdcontext.applyPreset');
+          break;
+        case 'aiReviewConfig':
+          vscode.commands.executeCommand('clawdcontext.aiReviewConfig');
+          break;
+        case 'aiValidate':
+          vscode.commands.executeCommand('clawdcontext.aiValidate');
+          break;
+        case 'aiGenerate':
+          vscode.commands.executeCommand('clawdcontext.aiGenerate');
+          break;
+        case 'aiContradictions':
+          vscode.commands.executeCommand('clawdcontext.aiContradictions');
+          break;
+        case 'scaffoldMarkdownOS':
+          vscode.commands.executeCommand('clawdcontext.scaffoldMarkdownOS');
+          break;
+        case 'openSettings':
+          vscode.commands.executeCommand('workbench.action.openSettings', 'clawdcontext');
+          break;
+        case 'lintMdFiles':
+          vscode.commands.executeCommand('clawdcontext.lintMdFiles');
+          break;
+      }
+    },
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -55,11 +94,13 @@ ${renderMetrics(budget)}
 </div>
 ${renderSecurityTable(lintResult)}
 ${renderPositionalMap(budget)}
+${renderAiStatus()}
+${renderActionButtons()}
 
 <p class="quote">"Treat context like OS memory: budget it, compact it, page it intelligently."</p>
 <p class="footer">ClawdContext — ${budget.allFiles.length} files · ${(budget.alwaysLoadedTokens + budget.onDemandTokens).toLocaleString()} total tokens</p>
 
-<script>${getWhatIfScript(budget)}</script>
+<script>${getWhatIfScript(budget)}${getActionButtonsScript()}</script>
 </body></html>`;
 }
 
@@ -140,7 +181,9 @@ function renderSecurityTable(lintResult: LintResult | null): string {
 
   const rows = reports.map(r => {
     const c = r.verdict === 'clean' ? '#059669' : r.verdict === 'suspicious' ? '#D97706' : '#DC2626';
-    return `<tr><td>${r.file.relativePath}</td><td style="color:${c};font-weight:600">${r.score}/100</td><td style="color:${c}">${r.verdict.toUpperCase()}</td><td>${r.findings.length}</td></tr>`;
+    const activeCount = r.findings.filter(f => !f.suppressed).length;
+    const suppLabel = r.suppressedCount > 0 ? ` <span style="color:var(--muted);font-weight:normal;font-size:11px">(${r.suppressedCount} suppressed)</span>` : '';
+    return `<tr><td>${r.file.relativePath}</td><td style="color:${c};font-weight:600">${r.score}/100</td><td style="color:${c}">${r.verdict.toUpperCase()}</td><td>${activeCount}${suppLabel}</td></tr>`;
   }).join('\n');
 
   return `<div class="card"><h2>🔒 Security Scan</h2>
@@ -179,6 +222,59 @@ function renderPositionalMap(budget: ContextBudget): string {
   ${items}</div>`;
 }
 
+function renderAiStatus(): string {
+  const config = getAiConfig();
+  const enabled = isAiEnabled();
+
+  if (config.provider === 'none') {
+    return `<div class="card ai-card">
+  <h2>🤖 AI Features</h2>
+  <div class="ai-off">Disabled <span style="color:var(--muted);font-size:12px">— Set <code>clawdcontext.ai.provider</code> in settings to enable</span></div>
+</div>`;
+  }
+
+  const providerLbl = getProviderLabel(config.provider);
+  const statusColor = enabled ? '#059669' : '#D97706';
+  const statusText = enabled ? 'Ready' : 'Missing API Key';
+  const certLabel = config.caCertPath ? `✅ Custom CA loaded` : 'System CAs';
+  const tlsLabel = config.rejectUnauthorized ? 'Verified' : '⚠️ Disabled';
+
+  return `<div class="card ai-card">
+  <h2>🤖 AI Features</h2>
+  <div class="ai-grid">
+    <div class="ai-item"><span class="ai-label">Provider</span><span class="ai-val">${providerLbl}</span></div>
+    <div class="ai-item"><span class="ai-label">Model</span><span class="ai-val">${config.model}</span></div>
+    <div class="ai-item"><span class="ai-label">Status</span><span class="ai-val" style="color:${statusColor};font-weight:600">${statusText}</span></div>
+    <div class="ai-item"><span class="ai-label">TLS</span><span class="ai-val">${tlsLabel}</span></div>
+    <div class="ai-item"><span class="ai-label">Certificates</span><span class="ai-val">${certLabel}</span></div>
+    <div class="ai-item"><span class="ai-label">Endpoint</span><span class="ai-val" style="font-size:11px">${config.baseUrl}</span></div>
+  </div>
+</div>`;
+}
+
+function renderActionButtons(): string {
+  const aiEnabled = isAiEnabled();
+  const aiButtons = aiEnabled ? `
+    <button class="action-btn action-ai" data-command="aiReviewConfig">🤖 AI Review</button>
+    <button class="action-btn action-ai" data-command="aiValidate">🔍 AI Validate</button>
+    <button class="action-btn action-ai" data-command="aiGenerate">✨ AI Generate</button>
+    <button class="action-btn action-ai" data-command="aiContradictions">⚡ Contradictions</button>
+  ` : '';
+
+  return `<div class="card actions-card">
+  <h2>⚡ Quick Actions</h2>
+  <div class="action-row">
+    <button class="action-btn action-primary" data-command="exportDashboard">📥 Export</button>
+    <button class="action-btn action-primary" data-command="cerDiff">📊 CER Diff</button>
+    <button class="action-btn action-primary" data-command="applyPreset">⚙️ Presets</button>
+    <button class="action-btn action-primary" data-command="lintMdFiles">🔒 Security Scan</button>
+    <button class="action-btn action-primary" data-command="scaffoldMarkdownOS">📝 Scaffold</button>
+    <button class="action-btn action-secondary" data-command="openSettings">⚙ Settings</button>
+    ${aiButtons}
+  </div>
+</div>`;
+}
+
 // ---------------------------------------------------------------------------
 // CSS + JS (kept separate for readability)
 // ---------------------------------------------------------------------------
@@ -205,7 +301,15 @@ table{width:100%;border-collapse:collapse}th{text-align:left;padding:5px 8px;bor
 .pos-zone{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600}
 .pos-start{background:#05966940;color:#059669}.pos-middle{background:#DC262630;color:#DC2626}.pos-end{background:#2563EB30;color:#2563EB}
 .quote{font-style:italic;color:var(--muted);border-left:3px solid ${cerColor};padding-left:12px;margin-top:20px;font-size:13px}
-.footer{text-align:center;color:var(--muted);font-size:11px;margin-top:20px}`;
+.footer{text-align:center;color:var(--muted);font-size:11px;margin-top:20px}
+.ai-card{margin-top:14px}.ai-off{font-size:13px;color:var(--muted)}.ai-off code{background:var(--border);padding:1px 5px;border-radius:3px;font-size:12px}
+.ai-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.ai-item{display:flex;flex-direction:column}.ai-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}.ai-val{font-size:13px;margin-top:2px}
+.actions-card{margin-top:14px}.action-row{display:flex;flex-wrap:wrap;gap:8px}
+.action-btn{border:1px solid var(--border);background:var(--widget);color:var(--fg);padding:8px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
+.action-btn:hover{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.action-primary{border-color:#2563EB40}.action-primary:hover{background:#2563EB;color:#fff;border-color:#2563EB}
+.action-secondary{border-color:var(--muted)}.action-secondary:hover{background:var(--muted);color:var(--bg)}
+.action-ai{border-color:#7C3AED40}.action-ai:hover{background:#7C3AED;color:#fff;border-color:#7C3AED}`;
 }
 
 function getWhatIfScript(budget: ContextBudget): string {
@@ -215,4 +319,15 @@ sl.addEventListener('input',()=>{const a=parseInt(sl.value),nl=cl+a,nc=Math.max(
 te.textContent=a.toLocaleString();ce.textContent=np+'%';
 let s,c;if(nc>.6){s='OPTIMAL';c='#059669'}else if(nc>.3){s='WARNING';c='#D97706'}else{s='CRITICAL — Heat death imminent';c='#DC2626'}
 ce.style.color=c;se.innerHTML='<span style="color:'+c+';font-weight:600">'+s+'</span> — '+(nl/1000).toFixed(1)+'K / '+(tb/1000).toFixed(0)+'K loaded';});`;
+}
+
+function getActionButtonsScript(): string {
+  return `
+const vscode=acquireVsCodeApi();
+document.querySelectorAll('.action-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const cmd=btn.getAttribute('data-command');
+    if(cmd){vscode.postMessage({command:cmd});}
+  });
+});`;
 }

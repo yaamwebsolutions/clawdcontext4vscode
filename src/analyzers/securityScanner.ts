@@ -14,13 +14,77 @@ export interface SecurityFinding {
   message: string;
   detail: string;
   matchedText: string;
+  suppressed?: boolean;       // true if in code block or allowlisted
+  suppressReason?: string;    // why it was suppressed
 }
 
 export interface SecurityReport {
   file: AgentFile;
   findings: SecurityFinding[];
-  score: number;        // 0–100, lower = more suspicious
+  suppressedCount: number;    // how many findings were suppressed
+  score: number;              // 0–100, lower = more suspicious
   verdict: 'clean' | 'suspicious' | 'dangerous';
+}
+
+// ─── Configuration Helpers ──────────────────────────────────────────
+
+interface SecurityConfig {
+  allowlist: string[];        // SEC_* codes to suppress entirely
+  trustedDomains: string[];   // domains allowed in URL patterns
+  codeBlockAware: boolean;    // downgrade findings inside ``` blocks
+}
+
+function getSecurityConfig(): SecurityConfig {
+  const cfg = vscode.workspace.getConfiguration('clawdcontext');
+  return {
+    allowlist: cfg.get<string[]>('securityAllowlist', []),
+    trustedDomains: cfg.get<string[]>('trustedDomains', []),
+    codeBlockAware: cfg.get<boolean>('securityCodeBlockAware', true),
+  };
+}
+
+/**
+ * Build a set of lines that are inside fenced code blocks (```).
+ * Findings on these lines are documentation examples, not threats.
+ */
+function getCodeBlockLines(content: string): Set<number> {
+  const lines = content.split('\n');
+  const codeLines = new Set<number>();
+  let inBlock = false;
+  for (let i = 0; i < lines.length; i++) {
+    if (/^\s*```/.test(lines[i])) {
+      if (inBlock) {
+        // closing fence — this line is still in the block
+        codeLines.add(i);
+        inBlock = false;
+      } else {
+        inBlock = true;
+        codeLines.add(i);
+      }
+    } else if (inBlock) {
+      codeLines.add(i);
+    }
+  }
+  return codeLines;
+}
+
+/**
+ * Check if a character range falls inside an inline backtick span (` ... `).
+ * This catches patterns like `npm run deploy` or `process.env.VAR` in prose.
+ */
+function isInsideInlineCode(line: string, matchStart: number, matchEnd: number): boolean {
+  // Find all inline code spans (backtick pairs) in the line
+  const backtickRe = /`([^`]+)`/g;
+  let m: RegExpExecArray | null;
+  while ((m = backtickRe.exec(line)) !== null) {
+    const spanStart = m.index;
+    const spanEnd = m.index + m[0].length;
+    // Match is inside this backtick span if it overlaps
+    if (matchStart >= spanStart && matchEnd <= spanEnd) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // ─── Pattern Definitions ────────────────────────────────────────────
@@ -216,15 +280,97 @@ const SECURITY_PATTERNS: SecurityPattern[] = [
     description: 'Skill gathers system information that could be used for fingerprinting or targeted attacks.',
     reference: 'Reconnaissance is first stage of attack chain in compromised agent skills',
   },
+
+  // ── Supply-Chain Attacks ──────────────────────────────────────
+  {
+    id: 'SEC_SUPPLY_CHAIN',
+    name: 'Supply-chain manipulation',
+    severity: 'high',
+    patterns: [
+      /npm\s+install\s+(?:--save\s+)?[a-z][\w.-]*(?:\s|$)/gi,     // npm install <pkg>
+      /pip\s+install\s+(?:--user\s+)?[a-z][\w.-]*/gi,              // pip install <pkg>
+      /gem\s+install\s+[a-z][\w.-]*/gi,                            // gem install
+      /go\s+get\s+[a-z][\w./-]*/gi,                                // go get
+      /cargo\s+install\s+[a-z][\w.-]*/gi,                          // cargo install
+      /(?:npx|pnpx|bunx)\s+[a-z@][\w./-]*/gi,                     // npx executes from registry
+      /--registry\s+https?:\/\/(?!registry\.npmjs\.org)/gi,         // Custom npm registry
+      /pip\s+install\s+--index-url\s+https?:\/\//gi,               // Custom PyPI index
+    ],
+    description: 'Skill installs packages from external registries. Supply-chain attacks inject malicious code via typosquatted or compromised packages.',
+    reference: 'Snyk 2026: Supply-chain attacks via agent skill instructions installing malicious packages',
+  },
+
+  // ── SSRF (Server-Side Request Forgery) ────────────────────────
+  {
+    id: 'SEC_SSRF',
+    name: 'Server-side request forgery vectors',
+    severity: 'high',
+    patterns: [
+      /https?:\/\/169\.254\.169\.254/gi,                            // AWS metadata endpoint
+      /https?:\/\/metadata\.google\.internal/gi,                    // GCP metadata
+      /https?:\/\/100\.100\.100\.200/gi,                            // Azure metadata (IMDS)
+      /https?:\/\/(?:10\.\d+|172\.(?:1[6-9]|2\d|3[01])|192\.168)\.\d+\.\d+/gi, // Internal IPs
+      /https?:\/\/localhost(?::\d+)?\/(?!$)/gi,                     // localhost with path
+      /https?:\/\/127\.0\.0\.\d+(?::\d+)?\/(?!$)/gi,               // loopback with path
+      /(?:gopher|dict|file|ftp):\/\//gi,                            // Protocol-based SSRF
+    ],
+    description: 'Skill targets internal network endpoints, cloud metadata services, or uses unusual protocols. Could leak cloud credentials or access internal APIs.',
+    reference: 'OWASP SSRF: Agent skills with cloud metadata access leak IAM credentials',
+  },
+
+  // ── Path Traversal ────────────────────────────────────────────
+  {
+    id: 'SEC_PATH_TRAVERSAL',
+    name: 'Path traversal / directory escape',
+    severity: 'high',
+    patterns: [
+      /\.\.\/\.\.\/\.\.\//g,                                        // Triple traversal
+      /\.\.\\\.\.\\\.\.(?:\\|\/)/g,                                  // Windows-style traversal
+      /%2e%2e(?:%2f|%5c)/gi,                                        // URL-encoded traversal
+      /(?:readFile|writeFile|unlink|rmdir|mkdir)\s*\(\s*['"`].*\.\.\//gi, // Node fs with traversal
+      /(?:open|read|write|unlink)\s*\(\s*['"`].*\.\.\//gi,         // Python file ops with traversal
+      /symlink|hardLink|fs\.link/gi,                                 // Symlink attacks
+    ],
+    description: 'Skill uses path traversal to access files outside its expected directory. Could read secrets or overwrite critical files.',
+    reference: 'CWE-22: Path traversal is a top-10 vulnerability used to escape agent sandboxes',
+  },
+
+  // ── Privilege Escalation ──────────────────────────────────────
+  {
+    id: 'SEC_PRIVESC',
+    name: 'Privilege escalation attempts',
+    severity: 'critical',
+    patterns: [
+      /\bsudo\s+/gi,                                                // sudo commands
+      /\bchmod\s+[0-7]*[67][0-7]{2}\b/gi,                          // chmod with setuid/setgid
+      /\bchown\s+root/gi,                                           // changing ownership to root
+      /\bsetuid\b|\bsetgid\b|\bcapabilities\b/gi,                  // capability manipulation
+      /\/usr\/bin\/doas|pkexec|polkit/gi,                           // elevation tools
+    ],
+    description: 'Skill attempts to elevate privileges via sudo, setuid, or similar mechanisms.',
+    reference: 'Privilege escalation in agent contexts allows full host compromise',
+  },
 ];
 
 // ─── Scanner ────────────────────────────────────────────────────────
 
 export function scanSkillSecurity(file: AgentFile): SecurityReport {
+  const config = getSecurityConfig();
+  const allowSet = new Set(config.allowlist.map(c => c.toUpperCase()));
+  const codeBlockLines = config.codeBlockAware ? getCodeBlockLines(file.content) : new Set<number>();
+
+  // Build trusted-domain regex for SEC_EXFIL_FETCH URL allowlisting
+  const trustedHostRe = config.trustedDomains.length > 0
+    ? new RegExp(config.trustedDomains.map(d => d.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i')
+    : null;
+
   const findings: SecurityFinding[] = [];
   const lines = file.content.split('\n');
 
   for (const pattern of SECURITY_PATTERNS) {
+    // Skip entirely if this code is in the allowlist
+    if (allowSet.has(pattern.id.toUpperCase())) { continue; }
+
     for (const regex of pattern.patterns) {
       // Reset regex state
       const re = new RegExp(regex.source, regex.flags);
@@ -237,6 +383,23 @@ export function scanSkillSecurity(file: AgentFile): SecurityReport {
         const lineRe = new RegExp(re.source, re.flags);
 
         while ((match = lineRe.exec(line)) !== null) {
+          // Check trusted domains for URL-based findings
+          if (pattern.id === 'SEC_EXFIL_FETCH' && trustedHostRe && trustedHostRe.test(match[0])) {
+            // Prevent infinite loops on zero-length matches
+            if (match[0].length === 0) { break; }
+            continue; // skip — URL matches a trusted domain
+          }
+
+          // Determine suppression: code blocks, inline backtick spans, or table cells with code refs
+          const inCodeBlock = codeBlockLines.has(lineIdx);
+          const inInlineCode = config.codeBlockAware && isInsideInlineCode(line, match.index, match.index + match[0].length);
+          const suppressed = inCodeBlock || inInlineCode;
+          const suppressReason = inCodeBlock
+            ? 'Inside markdown code block (documentation example)'
+            : inInlineCode
+              ? 'Inside inline backtick span (code reference)'
+              : undefined;
+
           findings.push({
             line: lineIdx,
             column: match.index,
@@ -246,6 +409,8 @@ export function scanSkillSecurity(file: AgentFile): SecurityReport {
             message: pattern.name,
             detail: pattern.description,
             matchedText: match[0].substring(0, 60),
+            suppressed,
+            suppressReason,
           });
 
           // Prevent infinite loops on zero-length matches
@@ -258,14 +423,18 @@ export function scanSkillSecurity(file: AgentFile): SecurityReport {
   // Deduplicate findings on same line with same code
   const deduped = deduplicateFindings(findings);
 
-  // Calculate security score
-  const score = calculateSecurityScore(deduped);
+  // Separate active vs suppressed findings for scoring
+  const activeFindings = deduped.filter(f => !f.suppressed);
+  const suppressedCount = deduped.filter(f => f.suppressed).length;
+
+  // Calculate security score based on active findings only
+  const score = calculateSecurityScore(activeFindings);
   const verdict: SecurityReport['verdict'] =
     score >= 80 ? 'clean' :
     score >= 40 ? 'suspicious' :
     'dangerous';
 
-  return { file, findings: deduped, score, verdict };
+  return { file, findings: deduped, suppressedCount, score, verdict };
 }
 
 function deduplicateFindings(findings: SecurityFinding[]): SecurityFinding[] {
@@ -298,12 +467,17 @@ export function addSecurityDiagnostics(
   report: SecurityReport,
   addDiag: (uri: vscode.Uri, diag: vscode.Diagnostic) => void
 ): void {
+  const activeCount = report.findings.filter(f => !f.suppressed).length;
+  const suppNote = report.suppressedCount > 0
+    ? ` (${report.suppressedCount} suppressed — code blocks or allowlist)`
+    : '';
+
   // File-level verdict
   if (report.verdict !== 'clean') {
     const diag = new vscode.Diagnostic(
       new vscode.Range(0, 0, 0, 0),
       `🔒 Security scan: ${report.verdict.toUpperCase()} (score: ${report.score}/100). ` +
-      `${report.findings.length} finding(s) detected. ` +
+      `${activeCount} active finding(s)${suppNote}. ` +
       (report.verdict === 'dangerous'
         ? 'DO NOT USE this skill without thorough review.'
         : 'Review findings before enabling this skill.'),
@@ -316,8 +490,10 @@ export function addSecurityDiagnostics(
     addDiag(report.file.uri, diag);
   }
 
-  // Individual findings
+  // Individual findings — only emit diagnostics for non-suppressed findings
   for (const finding of report.findings) {
+    if (finding.suppressed) { continue; }
+
     const severity =
       finding.severity === 'critical' ? vscode.DiagnosticSeverity.Error :
       finding.severity === 'high' ? vscode.DiagnosticSeverity.Error :

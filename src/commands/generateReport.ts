@@ -31,11 +31,12 @@ export async function generateReport(): Promise<void> {
     lines.push(
       '## Security',
       '',
-      '| Skill | Score | Verdict |',
-      '|-------|-------|---------|',
+      '| Skill | Score | Verdict | Active | Suppressed |',
+      '|-------|-------|---------|--------|------------|',
     );
     for (const r of lr.securityReports) {
-      lines.push(`| ${r.file.relativePath} | ${r.score}/100 | ${r.verdict} |`);
+      const active = r.findings.filter(f => !f.suppressed).length;
+      lines.push(`| ${r.file.relativePath} | ${r.score}/100 | ${r.verdict} | ${active} | ${r.suppressedCount} |`);
     }
   }
 

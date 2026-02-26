@@ -23,6 +23,23 @@ import {
 import { pruneLessons, promoteLessons } from './commands/lessonsCommands';
 import { generateReport } from './commands/generateReport';
 import { showDashboard } from './commands/showDashboard';
+import { cerDiffCommand } from './commands/cerDiffTracking';
+import { applyConfigPreset } from './commands/configPresets';
+import { exportDashboard } from './commands/dashboardExport';
+import {
+  aiTestConnection,
+  aiReviewConfig,
+  aiExplainDiagnostic,
+  aiSuggestRefactor,
+  aiSecurityReview,
+  aiValidateWorkspace,
+  aiValidateFile,
+  aiGenerateMissing,
+  aiGenerateFile,
+  aiFixCurrentFile,
+  aiDetectContradictions,
+  isAiEnabled,
+} from './ai';
 
 export function activate(context: vscode.ExtensionContext): void {
   console.log('ClawdContext activated');
@@ -88,6 +105,34 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('clawdcontext.moveToLessons', moveToLessonsCommand),
     vscode.commands.registerCommand('clawdcontext.archiveDeprecated', archiveDeprecatedCommand),
     vscode.commands.registerCommand('clawdcontext.analyzeBloat', analyzeBloatCommand),
+    // --- v0.4.0 commands ---
+    vscode.commands.registerCommand('clawdcontext.cerDiff', cerDiffCommand),
+    vscode.commands.registerCommand('clawdcontext.applyPreset', applyConfigPreset),
+    vscode.commands.registerCommand('clawdcontext.exportDashboard', exportDashboard),
+    // --- AI commands (optional — gracefully degrade when not configured) ---
+    vscode.commands.registerCommand('clawdcontext.aiTestConnection', aiTestConnection),
+    vscode.commands.registerCommand('clawdcontext.aiReviewConfig', aiReviewConfig),
+    vscode.commands.registerCommand('clawdcontext.aiExplainDiagnostic', aiExplainDiagnostic),
+    vscode.commands.registerCommand('clawdcontext.aiSuggestRefactor', aiSuggestRefactor),
+    vscode.commands.registerCommand('clawdcontext.aiSecurityReview', aiSecurityReview),
+    // --- AI v2 commands (eurka/future integration) ---
+    vscode.commands.registerCommand('clawdcontext.aiValidate', aiValidateWorkspace),
+    vscode.commands.registerCommand('clawdcontext.aiValidateFile', aiValidateFile),
+    vscode.commands.registerCommand('clawdcontext.aiGenerate', aiGenerateMissing),
+    vscode.commands.registerCommand('clawdcontext.aiGenerateFile', aiGenerateFile),
+    vscode.commands.registerCommand('clawdcontext.aiFix', aiFixCurrentFile),
+    vscode.commands.registerCommand('clawdcontext.aiContradictions', aiDetectContradictions),
+  );
+
+  // --- Set context key for AI-aware menus ---
+  vscode.commands.executeCommand('setContext', 'clawdcontext:aiEnabled', isAiEnabled());
+  // Re-evaluate when settings change
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration(e => {
+      if (e.affectsConfiguration('clawdcontext.ai')) {
+        vscode.commands.executeCommand('setContext', 'clawdcontext:aiEnabled', isAiEnabled());
+      }
+    }),
   );
 
   // --- File watcher ---

@@ -86,7 +86,7 @@ function lintContextBudget(
       const diag = new vscode.Diagnostic(
         range,
         `⚡ Context heat death: always-loaded files consume ${Math.round((1 - budget.cer) * 100)}% of context budget. ` +
-        `CER = ${budget.cer.toFixed(2)} (critical < 0.3). ` +
+        `CER = ${budget.cer.toFixed(2)} (critical). ` +
         `This file contributes ${file.tokens} tokens.`,
         vscode.DiagnosticSeverity.Error
       );
@@ -99,7 +99,7 @@ function lintContextBudget(
       const range = new vscode.Range(0, 0, 0, 0);
       const diag = new vscode.Diagnostic(
         range,
-        `⚠️ Context pressure: CER = ${budget.cer.toFixed(2)} (warning < 0.6). ` +
+        `⚠️ Context pressure: CER = ${budget.cer.toFixed(2)} (warning). ` +
         `This file contributes ${file.tokens} tokens. Consider moving procedures to SKILL.md.`,
         vscode.DiagnosticSeverity.Warning
       );

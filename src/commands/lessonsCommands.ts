@@ -19,6 +19,7 @@ export async function pruneLessons(): Promise<void> {
   const config = vscode.workspace.getConfiguration('clawdcontext');
   const ttlDays = config.get<number>('lessonsTtlDays', 60);
   const now = new Date();
+  let foundStale = false;
 
   for (const file of learningFiles) {
     const lines = file.content.split('\n');
@@ -38,9 +39,10 @@ export async function pruneLessons(): Promise<void> {
     }
 
     if (stale.length === 0) {
-      vscode.window.showInformationMessage('No stale entries. All clear!');
-      return;
+      continue; // Check remaining files instead of returning early
     }
+
+    foundStale = true;
 
     const picks = await vscode.window.showQuickPick(
       stale.map(e => ({
@@ -63,6 +65,10 @@ export async function pruneLessons(): Promise<void> {
         `Selected ${picks.length}. Use the quick-fix lightbulb to mark deprecated.`,
       );
     }
+  }
+
+  if (!foundStale) {
+    vscode.window.showInformationMessage('No stale entries found. All lessons are current!');
   }
 }
 

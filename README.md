@@ -19,7 +19,15 @@
 </p>
 
 <p align="center">
-  <img src="media/demo.png" alt="ClawdContext in action — sidebar, diagnostics, and CER dashboard" width="640" />
+  <img src="media/demo.png" alt="ClawdContext — CER dashboard and context health overview" width="640" />
+</p>
+
+<p align="center">
+  <img src="media/demo1.png" alt="ClawdContext — Markdown OS linter diagnostics and quick fixes" width="640" />
+</p>
+
+<p align="center">
+  <img src="media/demo2.png" alt="ClawdContext — Security scanner and lessons governance" width="640" />
 </p>
 
 ---
@@ -157,6 +165,39 @@ Shipped code actions:
 
 ## The Markdown OS Model (What Goes Where)
 
+### AI-Powered Agent Management (Optional)
+
+ClawdContext optionally integrates with AI providers for deeper analysis and automation.
+AI features require a configured provider but gracefully degrade when none is set.
+
+**Supported Providers:**
+- **OpenAI** — GPT-4o, GPT-4o-mini, o1, o3, etc.
+- **Anthropic** — Claude Sonnet 4, Claude Haiku, etc.
+- **Azure OpenAI** — Enterprise GPT deployments with Entra ID / mTLS
+- **Ollama** — Local models (Llama 3, Mistral, CodeLlama, etc.)
+- **DeepSeek** — DeepSeek-V3, DeepSeek-Coder, etc.
+
+**AI Capabilities:**
+- Validate agent files with quality gates and fix suggestions
+- Detect semantic contradictions across kernel, skills, and lessons
+- Generate missing agent files from project context analysis
+- Explain diagnostics with context-aware reasoning
+- Suggest refactors (kernel → skills extraction, lessons promotion)
+- Deep security review beyond regex pattern matching
+
+**Enterprise Features:**
+- mTLS client certificates (PFX/P12 or PEM cert + key)
+- Custom CA certificates for corporate proxies
+- Azure OpenAI with custom deployments and base URLs
+
+**Security:**
+- All AI-generated file paths are validated with `sanitizePath()` before writing
+- Path traversal attacks (`../`, absolute paths) are blocked
+- Only `.md` and `.json` files can be written
+- User confirmation required before any file write
+
+## The Markdown OS Model (What Goes Where)
+
 ### Layer 1 — Global invariants (`CLAUDE.md`, sometimes `AGENTS.md`)
 
 Use for:
@@ -250,33 +291,85 @@ No files yet? Run:
 
 ## Commands
 
-Commands declared in `package.json`:
+### Core Commands
 
-- `ClawdContext: Analyze Workspace`
-- `ClawdContext: Open Dashboard`
-- `ClawdContext: Lint .md Agent Files`
-- `ClawdContext: Generate Context Health Report`
-- `ClawdContext: Prune Stale Lessons`
-- `ClawdContext: Review Promotion Candidates`
-- `ClawdContext: Scaffold Markdown OS Templates`
-- `ClawdContext: Extract Procedure to SKILL.md`
-- `ClawdContext: Move Heuristic to lessons.md`
-- `ClawdContext: Archive Deprecated Entries`
-- `ClawdContext: Analyze Kernel Bloat`
+- `ClawdContext: Analyze Workspace` — Scan and analyze all agent markdown files
+- `ClawdContext: Open Dashboard` — Interactive CER dashboard with health overview
+- `ClawdContext: Lint .md Agent Files` — Run mdcc diagnostics
+- `ClawdContext: Generate Context Health Report` — Export health report
+- `ClawdContext: Prune Stale Lessons` — Review and deprecate stale lesson entries
+- `ClawdContext: Review Promotion Candidates` — Identify lessons ready for kernel promotion
+- `ClawdContext: Scaffold Markdown OS Templates` — Generate starter agent files
+- `ClawdContext: Extract Procedure to SKILL.md` — Refactor procedure from kernel to skill
+- `ClawdContext: Move Heuristic to lessons.md` — Move temporal heuristic from kernel
+- `ClawdContext: Archive Deprecated Entries` — Clean up deprecated lessons
+- `ClawdContext: Analyze Kernel Bloat` — Deep analysis of token-heavy kernel sections
+- `ClawdContext: Compare CER with Previous Commit` — Git-based CER diff tracking
+- `ClawdContext: Apply Config Preset` — Switch between strict/balanced/permissive profiles
+- `ClawdContext: Export Dashboard` — Save dashboard as JSON or Markdown
+
+### AI Commands (Optional — requires provider setup)
+
+- `ClawdContext AI: Test Connection` — Verify AI provider connectivity
+- `ClawdContext AI: Review Agent Config` — Get AI-powered optimization suggestions
+- `ClawdContext AI: Explain Diagnostic` — Context-aware diagnostic explanations
+- `ClawdContext AI: Suggest Refactor` — AI-recommended extraction and restructuring
+- `ClawdContext AI: Security Review` — Deep semantic security analysis
+- `ClawdContext AI: Validate Agent Files` — Full workspace validation with quality gates
+- `ClawdContext AI: Validate This File` — Single-file AI validation
+- `ClawdContext AI: Generate Missing Files` — Scaffold missing agent files from project context
+- `ClawdContext AI: Generate / Regenerate File` — Generate specific agent file type
+- `ClawdContext AI: Fix Violations` — Auto-fix diagnostics with safe path handling
+- `ClawdContext AI: Detect Contradictions` — Find semantic contradictions across files
 
 ## Configuration
 
-Key settings:
+### Core Settings
 
-- `clawdcontext.tokenBudget` (default `200000`)
-- `clawdcontext.cerWarningThreshold` (default `0.4`)
-- `clawdcontext.cerCriticalThreshold` (default `0.2`)
-- `clawdcontext.lessonsTtlDays` (default `60`)
-- `clawdcontext.lessonsMaxEntries` (default `50`)
-- `clawdcontext.alwaysLoadedFiles`
-- `clawdcontext.onDemandPatterns`
-- `clawdcontext.enableCodeLens`
-- `clawdcontext.enableStatusBar`
+| Setting | Default | Description |
+|---|---|---|
+| `clawdcontext.tokenBudget` | `200000` | Maximum context window tokens |
+| `clawdcontext.cerWarningThreshold` | `0.4` | CER warning threshold |
+| `clawdcontext.cerCriticalThreshold` | `0.2` | CER critical threshold |
+| `clawdcontext.lessonsTtlDays` | `60` | Days before a lesson is considered stale |
+| `clawdcontext.lessonsMaxEntries` | `50` | Max entries before Kessler risk triggers |
+| `clawdcontext.alwaysLoadedFiles` | `[...]` | Glob patterns for always-loaded files |
+| `clawdcontext.onDemandPatterns` | `[...]` | Glob patterns for on-demand files |
+| `clawdcontext.enableCodeLens` | `true` | Show CodeLens badges on lessons |
+| `clawdcontext.enableStatusBar` | `true` | Show CER status bar indicator |
+
+### AI Settings (Optional)
+
+| Setting | Default | Description |
+|---|---|---|
+| `clawdcontext.ai.provider` | `none` | AI provider: `none`, `openai`, `anthropic`, `azure-openai`, `ollama`, `deepseek` |
+| `clawdcontext.ai.model` | `""` | Model name (e.g., `gpt-4o`, `claude-sonnet-4-20250514`, `llama3`) |
+| `clawdcontext.ai.apiKey` | `""` | API key (stored in VS Code settings) |
+| `clawdcontext.ai.baseUrl` | `""` | Custom base URL override (required for Azure OpenAI endpoint, optional for others) |
+| `clawdcontext.ai.timeout` | `30000` | AI request timeout in milliseconds |
+| `clawdcontext.ai.maxTokens` | `4000` | Max tokens for AI responses |
+| `clawdcontext.ai.temperature` | `0.3` | Temperature for AI completions |
+| `clawdcontext.ai.azureDeployment` | `""` | Azure OpenAI deployment name |
+| `clawdcontext.ai.azureApiVersion` | `2024-12-01-preview` | Azure OpenAI API version |
+
+### Enterprise mTLS Settings
+
+| Setting | Default | Description |
+|---|---|---|
+| `clawdcontext.ai.pfxPath` | `""` | Path to PFX/P12 client certificate |
+| `clawdcontext.ai.pfxPassphrase` | `""` | PFX passphrase |
+| `clawdcontext.ai.certPath` | `""` | Path to PEM client certificate |
+| `clawdcontext.ai.keyPath` | `""` | Path to PEM private key |
+| `clawdcontext.ai.caCertPath` | `""` | Path to custom CA certificate |
+| `clawdcontext.ai.rejectUnauthorized` | `true` | Verify TLS certificates (disable only for debugging) |
+
+### Security Settings
+
+| Setting | Default | Description |
+|---|---|---|
+| `clawdcontext.securityAllowlist` | `[]` | SEC_* rule codes to suppress |
+| `clawdcontext.trustedDomains` | `[]` | Domains excluded from SEC_EXFIL_FETCH |
+| `clawdcontext.securityCodeBlockAware` | `true` | Suppress findings inside fenced/inline code blocks |
 
 ## Supported Ecosystems / File Conventions
 

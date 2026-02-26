@@ -30,8 +30,8 @@ This project aims to be:
 
 ### Prerequisites
 
-- Node.js 20+
-- VS Code 1.85+
+- Node.js 20+ (Node.js 22 recommended; see `.nvmrc`)
+- VS Code 1.96+
 
 ### Setup
 

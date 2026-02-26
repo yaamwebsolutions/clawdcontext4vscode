@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { classifyCerStatus } from './cerThresholds';
 
 // ─── Token Estimation ───────────────────────────────────────────────
 // BPE-approximation tokenizer: handles code, markdown, whitespace,
@@ -174,12 +175,12 @@ export function classifyFile(relativePath: string): { layer: LayerType; alwaysLo
   }
 
   // Hook layer
-  if (dir.includes('.claude/hooks') || dir.includes('hooks') && name.endsWith('.sh')) {
+  if (dir.includes('.claude/hooks') || dir.includes('.clawdcontext/hooks') || dir.includes('hooks') && name.endsWith('.sh')) {
     return { layer: 'hook', alwaysLoaded: false };
   }
 
   // Skill layer — on-demand
-  if (name === 'skill.md' || dir.includes('skills/') || dir.includes('.claude/skills')) {
+  if (name === 'skill.md' || dir.includes('skills/') || dir.includes('.claude/skills') || dir.includes('.clawdcontext/skills')) {
     return { layer: 'skill', alwaysLoaded: false };
   }
 
@@ -214,10 +215,12 @@ export async function scanWorkspace(): Promise<AgentFile[]> {
     '**/AGENTS.md', '**/agents.md',
     '**/SKILL.md', '**/skill.md',
     '**/.claude/**/*.md',
+    '**/.clawdcontext/**/*.md',
     '**/skills/**/*.md',
     '**/todo.md', '**/plan.md',
     '**/lessons.md', '**/lessons-learned.md',
     '**/.claude/hooks/**',
+    '**/.clawdcontext/hooks/**',
     '**/subagents/**/*.md',
     '**/agents/**/*.md',
     '**/DECISIONS.md',
@@ -344,19 +347,11 @@ export function calculateBudget(files: AgentFile[]): ContextBudget {
     ? (totalBudget - alwaysLoadedTokens) / totalBudget
     : 0;
 
-  let cerStatus: 'optimal' | 'warning' | 'critical';
-  if (cer >= (1 - warnThreshold)) {
-    cerStatus = 'optimal';
-  } else if (cer >= (1 - critThreshold)) {
-    cerStatus = 'warning';
-  } else {
-    cerStatus = cer < critThreshold ? 'critical' : 'warning';
-  }
-
-  // Simpler logic: CER > 0.6 = optimal, 0.3-0.6 = warning, < 0.3 = critical
-  if (cer > 0.6) { cerStatus = 'optimal'; }
-  else if (cer > 0.3) { cerStatus = 'warning'; }
-  else { cerStatus = 'critical'; }
+  // User-configured CER thresholds are direct CER cutoffs:
+  // - CER < critical threshold => critical
+  // - CER < warning threshold  => warning
+  // - otherwise                => optimal
+  const cerStatus = classifyCerStatus(cer, warnThreshold, critThreshold);
 
   return {
     totalBudget,
