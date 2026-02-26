@@ -8,6 +8,7 @@
 import * as vscode from 'vscode';
 import { aiComplete } from './provider';
 import { SYSTEM_PROMPT_GENERATOR, SYSTEM_PROMPT_FIXER } from './prompts';
+import { sanitizePath } from './pathSafety';
 import type { ContextBudget, AgentFile } from '../analyzers/tokenAnalyzer';
 import { estimateTokens } from '../analyzers/tokenAnalyzer';
 
@@ -306,31 +307,4 @@ function cleanOutput(text: string): string {
   return cleaned;
 }
 
-/**
- * Sanitize an AI-generated file path to prevent workspace-escape writes.
- * Rejects absolute paths, path traversal (../), and non-markdown extensions.
- * Returns the sanitized relative path, or null if unsafe.
- */
-export function sanitizePath(raw: string): string | null {
-  // Normalise separators and trim
-  let p = raw.trim().replace(/\\/g, '/');
-
-  // Reject absolute paths
-  if (p.startsWith('/') || /^[A-Za-z]:/.test(p)) { return null; }
-
-  // Resolve and reject traversal
-  const segments = p.split('/').filter(Boolean);
-  const resolved: string[] = [];
-  for (const seg of segments) {
-    if (seg === '..') { return null; }
-    if (seg !== '.') { resolved.push(seg); }
-  }
-  if (resolved.length === 0) { return null; }
-
-  p = resolved.join('/');
-
-  // Only allow markdown files in known agent paths
-  if (!p.endsWith('.md') && !p.endsWith('.json')) { return null; }
-
-  return p;
-}
+export { sanitizePath } from './pathSafety';

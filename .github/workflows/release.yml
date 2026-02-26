@@ -39,6 +39,9 @@ jobs:
             exit 1
           fi
 
+      - name: Compile, lint, and test
+        run: npm run check
+
       - name: Build and package
         run: npm run package:ci
 

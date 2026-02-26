@@ -11,7 +11,7 @@ import { isAiEnabled, aiComplete, testAiConnection, getAiConfig, getProviderLabe
 import { SYSTEM_PROMPT_ANALYST } from './prompts';
 import * as validator from './aiValidator';
 import * as generator from './aiGenerator';
-import { sanitizePath } from './aiGenerator';
+import { sanitizePath } from './pathSafety';
 import { state, analyzeWorkspace } from '../commands/analyzeWorkspace';
 import type { AgentFile } from '../analyzers/tokenAnalyzer';
 import type { Violation } from './aiValidator';
@@ -497,6 +497,10 @@ export async function aiGenerateMissing(): Promise<void> {
       }
       const ws = vscode.workspace.workspaceFolders?.[0];
       if (ws) {
+        const dir = path.dirname(safePath);
+        if (dir && dir !== '.') {
+          await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(ws.uri, dir));
+        }
         const uri = vscode.Uri.joinPath(ws.uri, safePath);
         await vscode.workspace.fs.writeFile(uri, Buffer.from(f.content, 'utf8'));
         vscode.window.showInformationMessage(`Saved ${safePath}`);

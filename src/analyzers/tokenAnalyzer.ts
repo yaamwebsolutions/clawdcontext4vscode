@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { classifyCerStatus } from './cerThresholds';
 
 // ─── Token Estimation ───────────────────────────────────────────────
 // BPE-approximation tokenizer: handles code, markdown, whitespace,
@@ -346,18 +347,11 @@ export function calculateBudget(files: AgentFile[]): ContextBudget {
     ? (totalBudget - alwaysLoadedTokens) / totalBudget
     : 0;
 
-  // Use user-configured thresholds: CER > (1 - warnThreshold) = optimal,
-  // > critThreshold = warning, otherwise critical.
-  // Defaults: warnThreshold=0.4 → optimal when CER > 0.6,
-  //           critThreshold=0.2 → critical when CER < 0.2.
-  let cerStatus: 'optimal' | 'warning' | 'critical';
-  if (cer > (1 - warnThreshold)) {
-    cerStatus = 'optimal';
-  } else if (cer > critThreshold) {
-    cerStatus = 'warning';
-  } else {
-    cerStatus = 'critical';
-  }
+  // User-configured CER thresholds are direct CER cutoffs:
+  // - CER < critical threshold => critical
+  // - CER < warning threshold  => warning
+  // - otherwise                => optimal
+  const cerStatus = classifyCerStatus(cer, warnThreshold, critThreshold);
 
   return {
     totalBudget,
