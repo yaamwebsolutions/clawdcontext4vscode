@@ -236,8 +236,8 @@ export async function cerDiffCommand(): Promise<void> {
   // Build quick-pick items from recent commits
   let commits: { hash: string; message: string }[] = [];
   try {
-    const output = child_process.execSync(
-      'git log --oneline -10 --format="%h|%s"',
+    const output = child_process.execFileSync(
+      'git', ['log', '--oneline', '-10', '--format=%h|%s'],
       { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] },
     );
     commits = output.trim().split('\n')

@@ -205,7 +205,7 @@ function makeRequest(opts: RequestOptions): Promise<string> {
       method: opts.method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'ClawdContext-VSCode/0.5.0',
+        'User-Agent': 'ClawdContext-VSCode/0.4.0',
         ...opts.headers,
       },
       timeout: opts.config.timeout,

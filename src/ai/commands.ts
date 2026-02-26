@@ -462,10 +462,16 @@ export async function aiGenerateMissing(): Promise<void> {
   if (!requireAi()) { return; }
   if (!state.budget) { await analyzeWorkspace(); }
 
-  const result = await vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Notification, title: 'AI generating missing agent files...' },
-    async (progress) => generator.generateMissing(state.budget, progress),
-  );
+  let result: generator.GenerationResult;
+  try {
+    result = await vscode.window.withProgress(
+      { location: vscode.ProgressLocation.Notification, title: 'AI generating missing agent files...' },
+      async (progress) => generator.generateMissing(state.budget, progress),
+    );
+  } catch (err) {
+    vscode.window.showErrorMessage(`AI generation failed: ${err instanceof Error ? err.message : String(err)}`);
+    return;
+  }
 
   if (result.files.length === 0) {
     vscode.window.showInformationMessage('All essential agent files already exist.');
@@ -518,10 +524,16 @@ export async function aiGenerateFile(): Promise<void> {
 
   if (!state.budget) { await analyzeWorkspace(); }
 
-  const result = await vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Notification, title: `AI generating ${target}...` },
-    async () => generator.generateFile(target as generator.GenerateTarget, state.budget, instructions || undefined),
-  );
+  let result: generator.GenerationResult;
+  try {
+    result = await vscode.window.withProgress(
+      { location: vscode.ProgressLocation.Notification, title: `AI generating ${target}...` },
+      async () => generator.generateFile(target as generator.GenerateTarget, state.budget, instructions || undefined),
+    );
+  } catch (err) {
+    vscode.window.showErrorMessage(`AI generation failed: ${err instanceof Error ? err.message : String(err)}`);
+    return;
+  }
 
   for (const f of result.files) {
     const safePath = sanitizePath(f.path);
@@ -587,10 +599,16 @@ export async function aiDetectContradictions(): Promise<void> {
   if (!state.budget) { await analyzeWorkspace(); }
   if (!state.budget) { return; }
 
-  const results = await vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Notification, title: 'AI detecting semantic contradictions...', cancellable: false },
-    async (progress) => validator.detectContradictions(state.budget!, progress),
-  );
+  let results: validator.ContradictionResult[];
+  try {
+    results = await vscode.window.withProgress(
+      { location: vscode.ProgressLocation.Notification, title: 'AI detecting semantic contradictions...', cancellable: false },
+      async (progress) => validator.detectContradictions(state.budget!, progress),
+    );
+  } catch (err) {
+    vscode.window.showErrorMessage(`AI contradiction detection failed: ${err instanceof Error ? err.message : String(err)}`);
+    return;
+  }
 
   if (results.length === 0) {
     vscode.window.showInformationMessage('✅ No semantic contradictions detected (Three-Body Problem: clear).');
@@ -615,10 +633,16 @@ export async function aiDetectContradictions(): Promise<void> {
 // ─── Internal: Fix with Violations ──────────────────────────────────
 
 async function aiFixWithViolations(file: AgentFile, violations: Violation[]): Promise<void> {
-  const result = await vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Notification, title: `AI fixing ${file.relativePath} (${violations.length} violations)...` },
-    async () => generator.fixFileFromViolations(file, violations),
-  );
+  let result: generator.GenerationResult;
+  try {
+    result = await vscode.window.withProgress(
+      { location: vscode.ProgressLocation.Notification, title: `AI fixing ${file.relativePath} (${violations.length} violations)...` },
+      async () => generator.fixFileFromViolations(file, violations),
+    );
+  } catch (err) {
+    vscode.window.showErrorMessage(`AI fix failed: ${err instanceof Error ? err.message : String(err)}`);
+    return;
+  }
 
   for (const f of result.files) {
     const safePath = sanitizePath(f.path);
