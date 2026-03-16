@@ -316,9 +316,9 @@ export function generateOfflineSkill(config: SfsSkillConfig): SfsGenerateRespons
 
   if (config.has_eval_harness || archLetter === 'G') {
     files.push(makeStubFile('evals/evals.json', 'json',
-      JSON.stringify({ assertions: [{ input: 'TODO', expected: 'TODO' }] }, null, 2)));
+      JSON.stringify(buildEvalsJson(config, title), null, 2)));
     files.push(makeStubFile('evals/quality-rubric.md', 'markdown',
-      '# Quality Rubric\n\n| Criterion | Weight | Pass |\n|-----------|--------|------|\n| TODO | 1.0 | TODO |\n'));
+      buildQualityRubric(config, title)));
   }
 
   // README
@@ -363,6 +363,101 @@ function makeScriptStub(operation: string, lang: string): string {
     default:
       return `# ${operation}\n# TODO: implement\n`;
   }
+}
+
+/**
+ * Build Agent Skills 2.0 evals.json from config data.
+ * Format: https://agentskills.io/llms.txt
+ */
+function buildEvalsJson(config: SfsSkillConfig, title: string): Record<string, unknown> {
+  const evals: Array<Record<string, unknown>> = [];
+  const keywords = config.positive_keywords.length ? config.positive_keywords : [];
+  const desc = config.description || title;
+
+  // Generate 2-3 eval cases from trigger keywords + description
+  if (keywords.length > 0) {
+    evals.push({
+      id: 1,
+      prompt: `I need help with ${keywords[0]}`,
+      expected_output: `The skill handles the ${keywords[0]} request using ${desc} — produces complete, actionable output.`,
+      assertions: [
+        'Output is non-empty and directly addresses the request',
+        `Output relates to ${keywords[0]}`,
+        'No TODO or placeholder text in output',
+      ],
+    });
+  }
+  if (keywords.length > 1) {
+    evals.push({
+      id: 2,
+      prompt: `Can you ${keywords[1]}? I need this done quickly.`,
+      expected_output: `Completes the ${keywords[1]} task efficiently with clear results.`,
+      assertions: [
+        'Output is non-empty and directly addresses the request',
+        `Output relates to ${keywords[1]}`,
+        'Output includes actionable steps or concrete results',
+      ],
+    });
+  }
+  // Always add an edge-case eval
+  evals.push({
+    id: evals.length + 1,
+    prompt: `Help me with something related to ${desc} but with minimal context`,
+    expected_output: 'The skill either asks clarifying questions or produces reasonable default output.',
+    assertions: [
+      'Output does not hallucinate requirements not mentioned in the prompt',
+      'Output either asks for clarification or provides a sensible default',
+    ],
+  });
+
+  return {
+    skill_name: config.name,
+    description: `Evaluation suite for ${title}. Run each eval with and without the skill to measure value added.`,
+    documentation: 'https://agentskills.io/skill-creation/evaluating-skills',
+    evals,
+  };
+}
+
+/**
+ * Build a quality rubric grounded in the Agent Skills 2.0 eval methodology.
+ */
+function buildQualityRubric(config: SfsSkillConfig, title: string): string {
+  return `# Quality Rubric — ${title}
+
+` +
+    `> Evaluation methodology: [Agent Skills 2.0](https://agentskills.io/skill-creation/evaluating-skills)\n\n` +
+    `## How to Evaluate\n\n` +
+    `1. Run each eval in \`evals/evals.json\` **with the skill** and **without the skill** (baseline)\n` +
+    `2. Grade each assertion as PASS or FAIL with concrete evidence\n` +
+    `3. Record results in \`grading.json\` per eval\n` +
+    `4. Aggregate into \`benchmark.json\` and compare delta\n\n` +
+    `## Scoring Criteria\n\n` +
+    `| Criterion | Weight | Pass Threshold |\n` +
+    `|---|---|---|\n` +
+    `| Completeness | 25% | All required sections/outputs present |\n` +
+    `| Accuracy | 25% | No factual errors, correct logic |\n` +
+    `| Actionability | 20% | Output is directly usable, not vague |\n` +
+    `| Format | 15% | Matches expected ${config.output_type || 'text'} output type |\n` +
+    `| Skill Delta | 15% | Pass rate improves vs. no-skill baseline |\n\n` +
+    `## Iteration Workflow\n\n` +
+    `\`\`\`\n` +
+    `evals/          → define test cases (evals.json)\n` +
+    `iteration-1/    → first run results\n` +
+    `  eval-*/       → per-test directories\n` +
+    `    with_skill/    → outputs + grading.json + timing.json\n` +
+    `    without_skill/ → baseline outputs + grading.json\n` +
+    `  benchmark.json   → aggregated pass rates + delta\n` +
+    `  feedback.json    → human review notes\n` +
+    `\`\`\`\n\n` +
+    `## Grading Template (grading.json)\n\n` +
+    `\`\`\`json\n` +
+    `{\n` +
+    `  "assertion_results": [\n` +
+    `    { "text": "...", "passed": true, "evidence": "Found X in output" }\n` +
+    `  ],\n` +
+    `  "summary": { "passed": 0, "failed": 0, "total": 0, "pass_rate": 0.0 }\n` +
+    `}\n` +
+    `\`\`\`\n`;
 }
 
 function buildTriggerSection(config: SfsSkillConfig): string {

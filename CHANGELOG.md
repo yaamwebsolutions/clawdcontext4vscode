@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.1] — 2026-03-16
+
+### Improved
+- **Skill Forge modular AI architecture** — Generation pipeline refactored from monolithic single-call to modular orchestrator
+  - Each file type (SKILL.md, scripts, references, templates, agents, evals) has its own specialized AI module with focused prompt
+  - Phase 1 (SKILL.md first) → Phase 2 (parallel generation via asyncio) → Phase 3 (scaffolding)
+  - Per-module fallback: if one module's AI call fails, only that module degrades to template — others keep AI quality
+- **Agent Skills 2.0 eval harness** — New `evals_gen` module generates evaluation files (evals.json, quality-rubric.md, validate script) following agentskills.io methodology
+- **Offline template eval support** — `buildEvalsJson()` and `buildQualityRubric()` added to extension templates for offline mode
+
 ## [0.5.0] — 2026-03-14
 
 ### Added
