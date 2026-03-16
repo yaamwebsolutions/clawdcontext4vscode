@@ -57,9 +57,9 @@ export interface AiConfig {
 // ─── Default Provider Config ────────────────────────────────────────
 
 const DEFAULT_MODELS: Record<Exclude<AiProvider, 'none'>, string> = {
-  openai: 'gpt-4o',
+  openai: 'gpt-4.1-mini',
   anthropic: 'claude-sonnet-4-20250514',
-  'azure-openai': 'gpt-4o',
+  'azure-openai': 'gpt-4.1-mini',
   ollama: 'llama3.2',
   deepseek: 'deepseek-chat',
 };

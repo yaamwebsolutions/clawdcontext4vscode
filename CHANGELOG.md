@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2] — 2026-03-16
+
+### Fixed
+- **Default OpenAI model updated from `gpt-4o` to `gpt-4.1-mini`** — `gpt-4o` was sunset by OpenAI, causing all AI features (AI Validate, AI Review, AI Generate, Contradictions) to fail with "completer not found" error
+- Azure OpenAI default also updated to `gpt-4.1-mini`
+- Settings descriptions updated to reflect new defaults
+
 ## [0.5.1] — 2026-03-16
 
 ### Improved

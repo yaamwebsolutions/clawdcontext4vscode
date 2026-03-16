@@ -2,7 +2,7 @@
   "name": "clawdcontext",
   "displayName": "ClawdContext — Markdown OS for AI Agents",
   "description": "The complete VS Code toolkit for agentic AI: context health (CER dashboard), Markdown OS diagnostics, lessons governance, SKILL.md security scanning, Skill Forge Studio (guided skill creation across 6 domains × 7 archetypes), multi-provider AI support (OpenAI, Anthropic, Azure, Ollama, DeepSeek), and enterprise-ready safety — all offline-first with zero telemetry.",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "publisher": "clawdcontext",
   "author": {
     "name": "Claudisiar"
@@ -597,7 +597,7 @@
           "enum": ["none", "openai", "anthropic", "azure-openai", "ollama", "deepseek"],
           "enumDescriptions": [
             "AI features disabled (default)",
-            "OpenAI (GPT-4o, GPT-4o-mini, etc.)",
+            "OpenAI (GPT-4.1, GPT-4.1-mini, etc.)",
             "Anthropic (Claude Sonnet, Opus, Haiku)",
             "Azure OpenAI Service (enterprise deployments)",
             "Ollama (local models — no API key needed)",
@@ -615,8 +615,8 @@
         "clawdcontext.ai.model": {
           "type": "string",
           "default": "",
-          "description": "Model name override. Leave empty for defaults: gpt-4o (OpenAI/Azure), claude-sonnet-4-20250514 (Anthropic), llama3.2 (Ollama), deepseek-chat (DeepSeek).",
-          "markdownDescription": "Model name override. Leave empty for smart defaults:\n\n| Provider | Default Model |\n|---|---|\n| OpenAI | `gpt-4o` |\n| Anthropic | `claude-sonnet-4-20250514` |\n| Azure OpenAI | `gpt-4o` |\n| Ollama | `llama3.2` |\n| DeepSeek | `deepseek-chat` |"
+          "description": "Model name override. Leave empty for defaults: gpt-4.1-mini (OpenAI/Azure), claude-sonnet-4-20250514 (Anthropic), llama3.2 (Ollama), deepseek-chat (DeepSeek).",
+          "markdownDescription": "Model name override. Leave empty for smart defaults:\n\n| Provider | Default Model |\n|---|---|\n| OpenAI | `gpt-4.1-mini` |\n| Anthropic | `claude-sonnet-4-20250514` |\n| Azure OpenAI | `gpt-4.1-mini` |\n| Ollama | `llama3.2` |\n| DeepSeek | `deepseek-chat` |"
         },
         "clawdcontext.ai.baseUrl": {
           "type": "string",
