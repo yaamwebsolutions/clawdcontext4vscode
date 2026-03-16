@@ -331,6 +331,7 @@ h2 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
   <div class="btn-group">
     <button class="btn btn-secondary" onclick="goStep(6)">← Back</button>
     <button class="btn btn-primary" onclick="doGenerate()" id="genBtn">⚡ Generate</button>
+    <button class="btn btn-secondary" onclick="previewFile('SKILL.md')" id="previewBtn" style="display:none">👁 Preview SKILL.md</button>
     <button class="btn btn-success" onclick="writeToWorkspace()" id="writeBtn" style="display:none">📁 Write to Workspace</button>
   </div>
 </div>
@@ -799,6 +800,7 @@ function doGenerate() {
   $('genBtn').disabled = true;
   $('genResult').style.display = 'none';
   $('writeBtn').style.display = 'none';
+  $('previewBtn').style.display = 'none';
 
   vscode.postMessage({ command: 'sfs:generate', config: buildConfig() });
 }
@@ -865,6 +867,7 @@ window.addEventListener('message', ev => {
 function showResult(data) {
   $('genResult').style.display = 'block';
   $('writeBtn').style.display = '';
+  $('previewBtn').style.display = '';
 
   // Badges
   $('resultAiBadge').textContent = data.ai_powered ? '🤖 AI-Generated' : '📄 Template';
@@ -874,7 +877,11 @@ function showResult(data) {
 
   // File tree
   $('resultTree').innerHTML = data.files.map(f =>
-    '<div class="file" style="cursor:pointer" onclick="previewFile(\\''+f.path.replace(/'/g,"\\\\'")+'\\')"><span class="status-dot status-generated"></span>'+f.path+' <span style="color:var(--fg3);font-size:10px">('+f.estimated_lines+' lines)</span></div>'
+    '<div class="file" style="display:flex;align-items:center;gap:8px">' +
+      '<span class="status-dot status-generated"></span>' +
+      '<span style="flex:1;cursor:pointer" onclick="previewFile(\\''+f.path.replace(/'/g,"\\\\'")+'\\')">'+f.path+' <span style="color:var(--fg3);font-size:10px">('+f.estimated_lines+' lines)</span></span>' +
+      '<button class="btn btn-secondary" style="padding:2px 8px;font-size:10px" onclick="previewFile(\\''+f.path.replace(/'/g,"\\\\'")+'\\')">Preview</button>' +
+    '</div>'
   ).join('');
 
   // Warnings

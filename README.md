@@ -10,7 +10,7 @@
 
 **Stop prompting. Start orchestrating.**
 
-ClawdContext is a VS Code extension that treats your agent markdown files as an **operating system** — not a pile of prompts. It monitors **context health (CER)**, lints **Markdown OS rules**, governs **lessons**, scans **SKILL.md** for risky patterns, and offers **quick-fix refactors** inside the editor.
+ClawdContext is the complete VS Code toolkit for agentic AI development. It transforms your Markdown agent files into a governed operating system — combining deep **context engineering** (CER dashboard, kernel mapping, lessons lifecycle), advanced **security scanning** (SKILL.md verdicts, enterprise mTLS, strict file safety), and rich **diagnostics** (semantic contradiction detection, Lost-in-the-Middle, Kessler risk, kernel bloat analysis). **Skill Forge Studio** (built-in) guides you through creating production-quality SKILL.md files with AI-powered templates across 6 domains and 7 archetypes — online or fully offline. Works with OpenAI, Anthropic, Azure, Ollama, and DeepSeek. Every feature is designed for safe, scalable, and auditable agent workflows — governance, refactoring, and context health, all in one.
 
 <p align="center">
   <a href="https://marketplace.visualstudio.com/items?itemName=clawdcontext.clawdcontext">
@@ -44,10 +44,29 @@ ClawdContext is a VS Code extension that treats your agent markdown files as an 
 
 - **8-step guided wizard** to create production-quality SKILL.md files from scratch
 - **6 domains** (DevOps, Security, Data, Frontend, Backend, AI/ML) × **7 archetypes** (Automator, Guardian, Analyst, Builder, Optimizer, Integrator, Specialist)
-- **Online mode** — connects to the Skill Forge Studio FastAPI backend for AI-powered generation with quality scoring
+- **Online mode** — connects to the Skill Forge Studio backend for AI-powered generation with quality scoring
 - **Offline mode** — built-in templates work without any backend, no network required
 - **AI bridge** — automatically reuses your extension AI provider settings for the backend
 - **Server lifecycle** — auto-start/stop the Python backend from within VS Code
+
+<p align="center">
+  <img src="media/demo3.png" alt="ClawdContext — Skill Forge Studio guided wizard" width="640" />
+</p>
+
+<p align="center">
+  <img src="media/demo4.png" alt="ClawdContext — Skill Forge Studio generation result" width="640" />
+</p>
+
+### How to use Skill Forge Studio
+
+1. Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
+2. Run **ClawdContext: Create Skill with Skill Forge** — opens the guided wizard
+3. Follow the 8-step flow: name your skill, pick a domain, choose an archetype, define scope, and generate
+4. **Offline mode** works immediately — no setup needed, built-in templates generate a complete SKILL.md
+5. **Online mode** (optional): run **ClawdContext: Toggle Skill Forge Server** to start the backend, or set `clawdcontext.skillForge.autoStart` to `true` for automatic startup
+6. The generated SKILL.md is saved to your workspace — ready to use
+
+> **Tip:** Skill Forge automatically reuses your AI provider settings. If you have OpenAI/Anthropic/Ollama configured in the extension, the backend picks them up via the AI bridge — no extra configuration.
 
 ---
 

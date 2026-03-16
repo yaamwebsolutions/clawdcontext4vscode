@@ -1,7 +1,7 @@
 {
   "name": "clawdcontext",
   "displayName": "ClawdContext — Markdown OS for AI Agents",
-  "description": "VS Code extension for AI coding agent Markdown systems: CER dashboard, mdcc-style diagnostics, lessons governance, SKILL.md security scanning, and quick-fix refactors.",
+  "description": "The complete VS Code toolkit for agentic AI: context health (CER dashboard), Markdown OS diagnostics, lessons governance, SKILL.md security scanning, Skill Forge Studio (guided skill creation across 6 domains × 7 archetypes), multi-provider AI support (OpenAI, Anthropic, Azure, Ollama, DeepSeek), and enterprise-ready safety — all offline-first with zero telemetry.",
   "version": "0.5.0",
   "publisher": "clawdcontext",
   "author": {
@@ -273,7 +273,7 @@
     "viewsWelcome": [
       {
         "view": "clawdcontext.layers",
-        "contents": "No Markdown OS files detected.\n[Scaffold Templates](command:clawdcontext.scaffoldMarkdownOS)\n[Analyze Workspace](command:clawdcontext.analyzeWorkspace)"
+        "contents": "No Markdown OS files detected.\n[Scaffold Templates](command:clawdcontext.scaffoldMarkdownOS)\n[Analyze Workspace](command:clawdcontext.analyzeWorkspace)\n[Create Skill with Skill Forge](command:clawdcontext.skillForge)"
       }
     ],
     "submenus": [
@@ -402,6 +402,11 @@
         }
       ],
       "view/title": [
+        {
+          "command": "clawdcontext.skillForge",
+          "when": "view == clawdcontext.layers",
+          "group": "navigation@0"
+        },
         {
           "command": "clawdcontext.refreshTree",
           "when": "view =~ /clawdcontext/",
