@@ -18,12 +18,9 @@ tsconfig.json
 
 CONTRIBUTING.md
 CODE_OF_CONDUCT.md
-GITHUB_SETUP.md
-PUBLISHING.md
 ROADMAP.md
 SECURITY.md
 SUPPORT.md
-MARKETPLACE_READINESS.md
 
 !dist/**
 !media/**

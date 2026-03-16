@@ -28,7 +28,15 @@ ClawdContext is already useful in production workflows, but the goal is a catego
 - [ ] BPE-backed tokenizer (replace character-ratio estimation with cl100k_base-calibrated counts)
 - [ ] Positional heatmap improvements — drag-to-reorder suggestions
 
-## Next (0.5.x)
+## Shipped (0.5.0)
+
+- [x] **Skill Forge Studio** — AI-powered SKILL.md creation wizard with 8-step guided flow
+- [x] Online mode (FastAPI backend) + offline fallback (built-in templates)
+- [x] AI provider bridge — reuses extension AI settings for the Skill Forge backend
+- [x] Auto-start / auto-stop server lifecycle management
+- [x] OS workspace initialization (`initOS`) and system status commands
+
+## Next (0.6.x)
 
 - Rule suppression / waiver UX with inline `<!-- clawdcontext-ignore -->` and audit trail
 - Performance tuning for large monorepos (incremental analysis, file-change debouncing)

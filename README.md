@@ -18,7 +18,7 @@ ClawdContext is a VS Code extension that treats your agent markdown files as an 
   </a>
 </p>
 
-<!-- TODO: Replace with a 15-25s GIF: Analyze Workspace → diagnostics → Quick Fix → CER dashboard update -->
+<!-- Demo: Analyze Workspace → diagnostics → Quick Fix → CER dashboard update -->
 <p align="center">
   <img src="media/demo.png" alt="ClawdContext — CER dashboard and context health overview" width="640" />
 </p>
@@ -39,6 +39,15 @@ ClawdContext is a VS Code extension that treats your agent markdown files as an 
 
 - Explain diagnostics, detect semantic contradictions, validate agent files, suggest refactors, deep security review
 - Works with OpenAI-compatible, Anthropic-compatible, Azure OpenAI, Ollama (local), and DeepSeek-compatible providers
+
+### Skill Forge Studio (new in 0.5.0)
+
+- **8-step guided wizard** to create production-quality SKILL.md files from scratch
+- **6 domains** (DevOps, Security, Data, Frontend, Backend, AI/ML) × **7 archetypes** (Automator, Guardian, Analyst, Builder, Optimizer, Integrator, Specialist)
+- **Online mode** — connects to the Skill Forge Studio FastAPI backend for AI-powered generation with quality scoring
+- **Offline mode** — built-in templates work without any backend, no network required
+- **AI bridge** — automatically reuses your extension AI provider settings for the backend
+- **Server lifecycle** — auto-start/stop the Python backend from within VS Code
 
 ---
 
@@ -91,7 +100,7 @@ Each diagnostic comes with a **quick-fix code action** when applicable.
 | **Prune Stale Lessons** | Archive lessons past TTL |
 | **Archive Deprecated Entries** | Clean dead rules |
 
-15 core commands + 11 AI commands — 26 total. [Full command list →](https://github.com/yaamwebsolutions/clawdcontext4vscode#commands)
+15 core commands + 11 AI commands + 4 OS/Skill Forge commands — 30 total. [Full command list →](https://github.com/yaamwebsolutions/clawdcontext4vscode#best-commands-the-8-youll-use-daily)
 
 ---
 
@@ -127,7 +136,15 @@ No telemetry. No analytics. No tracking.
 | `clawdcontext.lessonsTtlDays` | `60` | Days before a lesson is stale |
 | `clawdcontext.lessonsMaxEntries` | `50` | Max lessons before Kessler risk |
 
-All settings: [full configuration reference →](https://github.com/yaamwebsolutions/clawdcontext4vscode#configuration)
+**Skill Forge** (new in 0.5.0):
+
+| Setting | Default | What it controls |
+|---|---|---|
+| `clawdcontext.skillForge.serverUrl` | `http://localhost:8742` | Skill Forge Studio backend URL |
+| `clawdcontext.skillForge.apiKey` | *(empty)* | API key for the backend (if protected) |
+| `clawdcontext.skillForge.autoStart` | `false` | Auto-start the Python backend on activation |
+
+All settings: [full configuration reference →](https://github.com/yaamwebsolutions/clawdcontext4vscode#minimal-settings-start-here)
 
 ---
 

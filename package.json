@@ -2,7 +2,7 @@
   "name": "clawdcontext",
   "displayName": "ClawdContext — Markdown OS for AI Agents",
   "description": "VS Code extension for AI coding agent Markdown systems: CER dashboard, mdcc-style diagnostics, lessons governance, SKILL.md security scanning, and quick-fix refactors.",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "publisher": "clawdcontext",
   "author": {
     "name": "Claudisiar"
@@ -18,6 +18,23 @@
   },
   "qna": "https://github.com/yaamwebsolutions/clawdcontext4vscode/discussions",
   "pricing": "Free",
+  "badges": [
+    {
+      "url": "https://img.shields.io/github/actions/workflow/status/yaamwebsolutions/clawdcontext4vscode/ci.yml?branch=main&label=CI&logo=github",
+      "href": "https://github.com/yaamwebsolutions/clawdcontext4vscode/actions/workflows/ci.yml",
+      "description": "CI status"
+    },
+    {
+      "url": "https://img.shields.io/github/license/yaamwebsolutions/clawdcontext4vscode?color=blue",
+      "href": "https://github.com/yaamwebsolutions/clawdcontext4vscode/blob/main/LICENSE",
+      "description": "License: MIT"
+    },
+    {
+      "url": "https://img.shields.io/github/stars/yaamwebsolutions/clawdcontext4vscode?style=social",
+      "href": "https://github.com/yaamwebsolutions/clawdcontext4vscode",
+      "description": "GitHub Stars"
+    }
+  ],
   "engines": {
     "vscode": "^1.96.0"
   },
@@ -203,6 +220,26 @@
         "command": "clawdcontext.aiContradictions",
         "title": "ClawdContext AI: Detect Contradictions",
         "icon": "$(warning)"
+      },
+      {
+        "command": "clawdcontext.initOS",
+        "title": "ClawdContext: Initialize OS Workspace",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "clawdcontext.osStatus",
+        "title": "ClawdContext: OS System Status",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "clawdcontext.skillForge",
+        "title": "ClawdContext: Create Skill with Skill Forge",
+        "icon": "$(symbol-constructor)"
+      },
+      {
+        "command": "clawdcontext.skillForgeToggleServer",
+        "title": "ClawdContext: Toggle Skill Forge Server",
+        "icon": "$(server-process)"
       }
     ],
     "viewsContainers": {
@@ -409,6 +446,16 @@
           "command": "clawdcontext.scaffoldMarkdownOS",
           "when": "view == clawdcontext.layers",
           "group": "overflow@5"
+        },
+        {
+          "command": "clawdcontext.initOS",
+          "when": "view == clawdcontext.layers",
+          "group": "overflow@6"
+        },
+        {
+          "command": "clawdcontext.osStatus",
+          "when": "view == clawdcontext.layers",
+          "group": "overflow@7"
         }
       ],
       "view/item/context": [
@@ -638,6 +685,23 @@
           "type": "string",
           "default": "",
           "description": "Passphrase for the PFX/P12 certificate. Only needed if your PFX file is password-protected."
+        },
+        "clawdcontext.skillForge.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:8742",
+          "description": "Skill Forge Studio backend URL.",
+          "markdownDescription": "URL of the Skill Forge Studio backend.\n\nDefault: `http://localhost:8742`\n\nChange this if you run the backend on a different host or port."
+        },
+        "clawdcontext.skillForge.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Optional API key for the Skill Forge Studio backend (if protected)."
+        },
+        "clawdcontext.skillForge.autoStart": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically start the Skill Forge Studio backend when the extension activates.",
+          "markdownDescription": "Automatically start the Skill Forge Studio Python backend when the extension activates.\n\nRequires `skill_forge_studio/` with a Python venv in the workspace."
         }
       }
     },

@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.5.0] — 2026-03-14
+
+### Added
+- **Skill Forge Studio integration** — Create production-quality SKILL.md bundles directly from VS Code
+  - `ClawdContext: Create Skill with Skill Forge` — 8-step wizard (Elicitate → Architect → Generate → Validate → Iterate → Export)
+  - `ClawdContext: Toggle Skill Forge Server` — Start/stop the SFS Python backend from the status bar
+  - **Online mode**: Full SFS backend integration (recommend, generate, validate, export via REST API)
+  - **Offline mode**: Template-based generation for all 7 archetypes when backend is unavailable
+  - **AI bridge**: Forwards extension AI settings (OpenAI, Anthropic, Azure, DeepSeek, Ollama) to SFS backend
+  - **Auto-start**: Optional background start of SFS Python backend (`skillForge.autoStart` setting)
+  - **File output**: Writes generated skills directly to `.clawdcontext/skills/` in the workspace
+
+### New Settings
+- `clawdcontext.skillForge.serverUrl` — SFS backend URL (default: `http://localhost:8742`)
+- `clawdcontext.skillForge.apiKey` — API key for authenticated SFS backends
+- `clawdcontext.skillForge.autoStart` — Auto-start SFS backend on extension activation
+
+### Architecture
+- 7 new source files in `src/skillForge/`: sfsClient, serverManager, aiBridge, webviewHtml, skillForgePanel, templates, index
+- Zero new npm dependencies (HTTP client uses Node.js built-in `http`/`https`)
+- Vanilla HTML/CSS/JS webview (no bundler, no React)
+
 ## [0.4.1] — 2026-02-26
 
 ### Fixed

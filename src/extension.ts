@@ -40,6 +40,8 @@ import {
   aiDetectContradictions,
   isAiEnabled,
 } from './ai';
+import { initializeOSWorkspace, showOSStatus } from './commands/osWorkspace';
+import { SfsClient, SfsServerManager, openSkillForgePanel } from './skillForge';
 
 export function activate(context: vscode.ExtensionContext): void {
   console.log('ClawdContext activated');
@@ -91,6 +93,16 @@ export function activate(context: vscode.ExtensionContext): void {
     statusBar,
   });
 
+  // --- Skill Forge infrastructure ---
+  const sfsConfig = vscode.workspace.getConfiguration('clawdcontext.skillForge');
+  const sfsClient = new SfsClient(
+    sfsConfig.get<string>('serverUrl', 'http://localhost:8742'),
+    sfsConfig.get<string>('apiKey', ''),
+  );
+  const sfsServerManager = new SfsServerManager(sfsClient);
+  const sfsDeps = { client: sfsClient, serverManager: sfsServerManager };
+  context.subscriptions.push(sfsServerManager);
+
   // --- Register commands ---
   context.subscriptions.push(
     vscode.commands.registerCommand('clawdcontext.analyzeWorkspace', analyzeWorkspace),
@@ -122,7 +134,21 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('clawdcontext.aiGenerateFile', aiGenerateFile),
     vscode.commands.registerCommand('clawdcontext.aiFix', aiFixCurrentFile),
     vscode.commands.registerCommand('clawdcontext.aiContradictions', aiDetectContradictions),
+    // --- OS Workspace commands ---
+    vscode.commands.registerCommand('clawdcontext.initOS', initializeOSWorkspace),
+    vscode.commands.registerCommand('clawdcontext.osStatus', showOSStatus),
+    // --- Skill Forge ---
+    vscode.commands.registerCommand('clawdcontext.skillForge', () => openSkillForgePanel(sfsDeps)),
+    vscode.commands.registerCommand('clawdcontext.skillForgeToggleServer', () => {
+      if (sfsServerManager.status === 'running') { sfsServerManager.stop(); }
+      else { sfsServerManager.start(); }
+    }),
   );
+
+  // Auto-start SFS backend if configured
+  if (sfsConfig.get<boolean>('autoStart', false)) {
+    sfsServerManager.start();
+  }
 
   // --- Set context key for AI-aware menus ---
   vscode.commands.executeCommand('setContext', 'clawdcontext:aiEnabled', isAiEnabled());

@@ -12,3 +12,4 @@ export { showDashboard } from './showDashboard';
 export { cerDiffCommand } from './cerDiffTracking';
 export { applyConfigPreset } from './configPresets';
 export { exportDashboard } from './dashboardExport';
+export { openSkillForge } from './skillForge';
