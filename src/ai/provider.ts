@@ -10,6 +10,7 @@ import * as vscode from 'vscode';
 import * as https from 'https';
 import * as http from 'http';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as tls from 'tls';
 
 // ─── Types ──────────────────────────────────────────────────────────
@@ -132,7 +133,7 @@ function buildHttpsAgent(config: AiConfig): https.Agent {
   // PFX/P12 certificate bundle (Windows/Azure enterprise, mTLS)
   if (config.pfxPath) {
     try {
-      const pfxPath = config.pfxPath.replace(/^~/, process.env.HOME || '');
+      const pfxPath = config.pfxPath.replace(/^~/, os.homedir());
       if (fs.existsSync(pfxPath)) {
         options.pfx = fs.readFileSync(pfxPath);
         if (config.pfxPassphrase) { options.passphrase = config.pfxPassphrase; }
@@ -147,8 +148,8 @@ function buildHttpsAgent(config: AiConfig): https.Agent {
   // PEM certificate + key (Linux/container mTLS)
   if (config.certPath && config.keyPath) {
     try {
-      const certPath = config.certPath.replace(/^~/, process.env.HOME || '');
-      const keyPath = config.keyPath.replace(/^~/, process.env.HOME || '');
+      const certPath = config.certPath.replace(/^~/, os.homedir());
+      const keyPath = config.keyPath.replace(/^~/, os.homedir());
       if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
         options.cert = fs.readFileSync(certPath);
         options.key = fs.readFileSync(keyPath);
@@ -163,7 +164,7 @@ function buildHttpsAgent(config: AiConfig): https.Agent {
   // Custom CA certificate (enterprise root CA, corporate proxy)
   if (config.caCertPath) {
     try {
-      const caPath = config.caCertPath.replace(/^~/, process.env.HOME || '');
+      const caPath = config.caCertPath.replace(/^~/, os.homedir());
       if (fs.existsSync(caPath)) {
         const caCert = fs.readFileSync(caPath);
         options.ca = [...tls.rootCertificates, caCert.toString()];

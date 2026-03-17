@@ -81,16 +81,17 @@ export class SfsServerManager implements vscode.Disposable {
     // Find Python interpreter
     const pythonPath = this.findPython(sfsRoot);
     if (!pythonPath) {
-      this.outputChannel.appendLine('[SFS] No Python venv found. Run: cd skill_forge_studio && ./run.sh');
+      const setupCmd = process.platform === 'win32' ? '.\\run.ps1' : './run.sh';
+      this.outputChannel.appendLine(`[SFS] No Python venv found. Run: cd skill_forge_studio && ${setupCmd}`);
       this.setStatus('error');
       vscode.window.showWarningMessage(
-        'Skill Forge: No Python venv found. Run ./run.sh in skill_forge_studio/ first.',
+        `Skill Forge: No Python venv found. Run ${setupCmd} in skill_forge_studio/ first.`,
         'Open Terminal',
       ).then(choice => {
         if (choice === 'Open Terminal') {
           const terminal = vscode.window.createTerminal({ name: 'Skill Forge Setup', cwd: sfsRoot });
           terminal.show();
-          terminal.sendText('./run.sh');
+          terminal.sendText(setupCmd);
         }
       });
       return false;
@@ -158,15 +159,19 @@ export class SfsServerManager implements vscode.Disposable {
   /** Stop the SFS backend server. */
   stop(): void {
     this.stopHealthPoll();
-    if (this.process) {
+    if (this.process && this.process.pid) {
       this.outputChannel.appendLine('[SFS] Stopping backend...');
-      this.process.kill('SIGTERM');
+      if (process.platform === 'win32') {
+        // Windows: use taskkill for reliable process tree termination
+        cp.exec(`taskkill /pid ${this.process.pid} /T /F`, () => { /* best-effort */ });
+      } else {
+        this.process.kill('SIGTERM');
+      }
       // Force kill after 5s
+      const proc = this.process;
       setTimeout(() => {
-        if (this.process) {
-          this.process.kill('SIGKILL');
-          this.process = null;
-        }
+        try { proc.kill(); } catch { /* already dead */ }
+        if (this.process === proc) { this.process = null; }
       }, 5000);
     }
     this.setStatus('stopped');
@@ -181,21 +186,19 @@ export class SfsServerManager implements vscode.Disposable {
   // ─── Private helpers ──────────────────────────────────────
 
   private findPython(sfsRoot: string): string | undefined {
-    // Check venv/ then .venv/ — match run.sh convention
-    const candidates = [
-      path.join(sfsRoot, 'venv', 'bin', 'python'),
-      path.join(sfsRoot, 'venv', 'bin', 'python3'),
-      path.join(sfsRoot, '.venv', 'bin', 'python'),
-      path.join(sfsRoot, '.venv', 'bin', 'python3'),
-    ];
-
-    // On Windows, look for Scripts/python.exe
-    if (process.platform === 'win32') {
-      candidates.push(
-        path.join(sfsRoot, 'venv', 'Scripts', 'python.exe'),
-        path.join(sfsRoot, '.venv', 'Scripts', 'python.exe'),
-      );
-    }
+    // Build OS-appropriate candidate list (avoid checking paths that can't exist)
+    const isWin = process.platform === 'win32';
+    const candidates: string[] = isWin
+      ? [
+          path.join(sfsRoot, 'venv', 'Scripts', 'python.exe'),
+          path.join(sfsRoot, '.venv', 'Scripts', 'python.exe'),
+        ]
+      : [
+          path.join(sfsRoot, 'venv', 'bin', 'python'),
+          path.join(sfsRoot, 'venv', 'bin', 'python3'),
+          path.join(sfsRoot, '.venv', 'bin', 'python'),
+          path.join(sfsRoot, '.venv', 'bin', 'python3'),
+        ];
 
     for (const candidate of candidates) {
       if (fs.existsSync(candidate)) { return candidate; }

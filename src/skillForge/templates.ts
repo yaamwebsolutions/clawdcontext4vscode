@@ -230,7 +230,9 @@ export function generateOfflineSkill(config: SfsSkillConfig): SfsGenerateRespons
     .map(t => `| ${t} | examples/${slug(t)}.md |`).join('\n');
   const referenceTable = (config.variant_names.length ? config.variant_names : ['default'])
     .map(v => `| ${v} | references/${slug(v)}.md |`).join('\n');
-  const scriptExt = { python: 'py', javascript: 'js', shell: 'sh' }[config.script_language] || 'py';
+  const scriptExt = config.script_language === 'shell' && process.platform === 'win32'
+    ? 'ps1'
+    : ({ python: 'py', javascript: 'js', shell: 'sh' }[config.script_language] || 'py');
   const scriptTable = (config.operations.length ? config.operations : ['main'])
     .map(op => `| scripts/${slug(op)}.${scriptExt} | ${op} |`).join('\n');
   const agentTable = (config.subagents.length ? config.subagents : [])
@@ -296,6 +298,11 @@ export function generateOfflineSkill(config: SfsSkillConfig): SfsGenerateRespons
         '#!/bin/bash\n# Initialize scaffold\necho "TODO: scaffold init"\n'));
       files.push(makeStubFile('scripts/bundle.sh', 'shellscript',
         '#!/bin/bash\n# Build and bundle\necho "TODO: build + bundle"\n'));
+      // Windows equivalents
+      files.push(makeStubFile('scripts/init.ps1', 'powershell',
+        '# Initialize scaffold\nWrite-Host "TODO: scaffold init"\n'));
+      files.push(makeStubFile('scripts/bundle.ps1', 'powershell',
+        '# Build and bundle\nWrite-Host "TODO: build + bundle"\n'));
     }
     if (config.has_shared_utils) {
       files.push(makeStubFile(
@@ -349,6 +356,7 @@ function makeStubFile(path: string, language: string, content: string): SfsGener
 }
 
 function scriptLanguageId(lang: string): string {
+  if (lang === 'shell' && process.platform === 'win32') { return 'powershell'; }
   return { python: 'python', javascript: 'javascript', shell: 'shellscript' }[lang] || 'plaintext';
 }
 
@@ -358,8 +366,9 @@ function makeScriptStub(operation: string, lang: string): string {
       return `#!/usr/bin/env python3\n"""${operation} — TODO: implement"""\n\ndef main():\n    raise NotImplementedError("${operation}")\n\nif __name__ == "__main__":\n    main()\n`;
     case 'javascript':
       return `#!/usr/bin/env node\n/** ${operation} — TODO: implement */\n\nfunction main() {\n  throw new Error("${operation}: not implemented");\n}\n\nmain();\n`;
-    case 'shell':
-      return `#!/bin/bash\n# ${operation} — TODO: implement\nset -euo pipefail\n\necho "TODO: implement ${operation}"\n`;
+    case 'shell':      if (process.platform === 'win32') {
+        return `# ${operation} \u2014 TODO: implement\n$ErrorActionPreference = "Stop"\n\nWrite-Host "TODO: implement ${operation}"\n`;
+      }      return `#!/bin/bash\n# ${operation} — TODO: implement\nset -euo pipefail\n\necho "TODO: implement ${operation}"\n`;
     default:
       return `# ${operation}\n# TODO: implement\n`;
   }

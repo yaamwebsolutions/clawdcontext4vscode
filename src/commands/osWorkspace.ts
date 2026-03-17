@@ -1,9 +1,12 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { exec } from 'child_process';
+import * as fs from 'fs';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+
+const isWin = process.platform === 'win32';
 
 const REPO_URL = 'https://github.com/ClawdContextOS/starter-stack.git';
 const INSTALL_SCRIPT_URL = 'https://raw.githubusercontent.com/ClawdContextOS/starter-stack/main/install.sh';
@@ -113,7 +116,7 @@ async function cloneStarterStack(): Promise<void> {
       progress.report({ message: 'Cloning starter-stack...' });
 
       try {
-        await execAsync(`git clone ${REPO_URL}`, { cwd: parentPath, timeout: 120000 });
+        await execFileAsync('git', ['clone', REPO_URL], { cwd: parentPath, timeout: 120000 });
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         vscode.window.showErrorMessage(`Clone failed: ${message}`);
@@ -123,28 +126,36 @@ async function cloneStarterStack(): Promise<void> {
       progress.report({ message: 'Running setup...' });
 
       try {
-        await execAsync('make setup', { cwd: osPath, timeout: 60000 });
+        await execFileAsync('make', ['setup'], { cwd: osPath, timeout: 60000 });
       } catch {
-        // make might not be available — try the manual steps
-        try {
-          await execAsync('chmod +x tools/*', { cwd: osPath, timeout: 5000 });
-        } catch {
-          // Tools might already be executable
+        // make might not be available — make tools executable on Unix
+        if (!isWin) {
+          try {
+            await execFileAsync('chmod', ['+x', ...findToolScripts(osPath)], { cwd: osPath, timeout: 5000 });
+          } catch {
+            // Tools might already be executable or no tools/ dir
+          }
         }
       }
 
       progress.report({ message: 'Running initial security scan...' });
 
       try {
-        await execAsync('bash tools/ccos-scan agent', { cwd: osPath, timeout: 30000 });
+        const scanScript = path.join(osPath, 'tools', 'ccos-scan');
+        if (isWin) {
+          // On Windows try python or node to run the script, or skip
+          await execFileAsync('python', [scanScript, 'agent'], { cwd: osPath, timeout: 30000 });
+        } else {
+          await execFileAsync('bash', [scanScript, 'agent'], { cwd: osPath, timeout: 30000 });
+        }
       } catch {
-        // Scan might find issues in _malicious (expected)
+        // Scan might find issues in _malicious (expected) or script not available
       }
 
       // Check if Docker is available for platform services
       let hasDocker = false;
       try {
-        await execAsync('docker compose version', { timeout: 5000 });
+        await execFileAsync('docker', ['compose', 'version'], { timeout: 5000 });
         hasDocker = true;
       } catch {
         // Docker not available
@@ -154,8 +165,8 @@ async function cloneStarterStack(): Promise<void> {
         progress.report({ message: 'Building platform services (AgentProxy, Scanner, FlightRecorder, Dashboard)...' });
 
         try {
-          await execAsync(
-            'docker compose -f docker-compose.platform.yml build',
+          await execFileAsync(
+            'docker', ['compose', '-f', 'docker-compose.platform.yml', 'build'],
             { cwd: osPath, timeout: 300000 },
           );
         } catch (err: unknown) {
@@ -166,8 +177,8 @@ async function cloneStarterStack(): Promise<void> {
         progress.report({ message: 'Starting ClawdContext OS platform...' });
 
         try {
-          await execAsync(
-            'docker compose -f docker-compose.platform.yml up -d',
+          await execFileAsync(
+            'docker', ['compose', '-f', 'docker-compose.platform.yml', 'up', '-d'],
             { cwd: osPath, timeout: 60000 },
           );
         } catch (err: unknown) {
@@ -207,11 +218,13 @@ async function cloneStarterStack(): Promise<void> {
 
 /**
  * Run the install script in an integrated terminal.
+ * On Unix: curl | bash. On Windows: PowerShell Invoke-WebRequest.
  */
 async function runInstallScript(): Promise<void> {
-  // Check if curl is available
+  // Check if curl is available (cross-platform)
+  const curlCheckCmd = isWin ? 'where' : 'which';
   try {
-    await execAsync('which curl');
+    await execFileAsync(curlCheckCmd, ['curl']);
   } catch {
     vscode.window.showErrorMessage(
       'curl is required for the install script. Please install curl or use the Quick Start method.',
@@ -224,7 +237,15 @@ async function runInstallScript(): Promise<void> {
     iconPath: new vscode.ThemeIcon('shield'),
   });
   terminal.show();
-  terminal.sendText(`curl -fsSL ${INSTALL_SCRIPT_URL} | bash`);
+
+  if (isWin) {
+    // PowerShell: download and execute
+    terminal.sendText(
+      `Invoke-WebRequest -Uri '${INSTALL_SCRIPT_URL}' -OutFile '$env:TEMP\\ccos-install.sh'; bash '$env:TEMP\\ccos-install.sh'`,
+    );
+  } else {
+    terminal.sendText(`curl -fsSL ${INSTALL_SCRIPT_URL} | bash`);
+  }
 
   vscode.window.showInformationMessage(
     'ClawdContext OS installer running in terminal. Follow the prompts to complete setup.',
@@ -320,8 +341,8 @@ export async function showOSStatus(): Promise<void> {
   lines.push('╠══════════════════════════════════════════╣');
 
   try {
-    const { stdout } = await execAsync(
-      'docker compose -f docker-compose.platform.yml ps --format "{{.Name}} {{.Status}}"',
+    const { stdout } = await execFileAsync(
+      'docker', ['compose', '-f', 'docker-compose.platform.yml', 'ps', '--format', '{{.Name}} {{.Status}}'],
       { cwd: rootPath, timeout: 10000 },
     );
 
@@ -351,4 +372,16 @@ export async function showOSStatus(): Promise<void> {
     language: 'plaintext',
   });
   await vscode.window.showTextDocument(doc, { preview: true });
+}
+
+/**
+ * List files in tools/ directory for chmod +x (avoids shell glob expansion).
+ */
+function findToolScripts(osPath: string): string[] {
+  const toolsDir = path.join(osPath, 'tools');
+  try {
+    return fs.readdirSync(toolsDir).map(f => path.join('tools', f));
+  } catch {
+    return [];
+  }
 }

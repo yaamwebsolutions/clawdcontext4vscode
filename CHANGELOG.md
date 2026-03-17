@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.5] — 2026-03-17
+
+### Fixed
+- **Full cross-platform OS support** — Extension now works on macOS, Linux, AND Windows
+- **osWorkspace.ts** — Replaced all `exec()` shell commands with `execFile()` (no shell dependency). Git clone, Docker compose, curl check, and install script all use cross-platform invocations
+- **serverManager.ts** — OS-aware Python venv discovery (Unix `bin/` vs Windows `Scripts/`), OS-appropriate setup command (`./run.sh` vs `.\run.ps1`), and reliable process termination (`taskkill` on Windows vs `SIGTERM` on Unix)
+- **provider.ts** — Tilde (`~`) expansion now uses `os.homedir()` instead of `process.env.HOME` (which is undefined on Windows)
+- **templates.ts** — Script generation detects OS: shell archetypes produce PowerShell (`.ps1`) on Windows and Bash (`.sh`) on Unix. Scaffold Pipeline (Archetype F) generates both `.sh` and `.ps1` scripts
+
 ## [0.5.4] — 2026-03-17
 
 ### Added

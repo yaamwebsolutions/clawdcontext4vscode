@@ -2,7 +2,7 @@
   "name": "clawdcontext",
   "displayName": "ClawdContext — Markdown OS for AI Agents",
   "description": "The complete VS Code toolkit for agentic AI: context health (CER dashboard), Markdown OS diagnostics, lessons governance, SKILL.md security scanning, Skill Forge Studio (guided skill creation across 6 domains × 7 archetypes), multi-provider AI support (OpenAI, Anthropic, Azure, Ollama, DeepSeek), and enterprise-ready safety — all offline-first with zero telemetry.",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "publisher": "clawdcontext",
   "author": {
     "name": "Claudisiar"
