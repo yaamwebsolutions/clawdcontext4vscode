@@ -23,6 +23,7 @@ export class SfsServerManager implements vscode.Disposable {
   private client: SfsClient;
   private _status: ServerStatus = 'stopped';
   private healthPollTimer: ReturnType<typeof setInterval> | null = null;
+  private _sfsRootWarned = false;
 
   constructor(client: SfsClient) {
     this.client = client;
@@ -61,8 +62,12 @@ export class SfsServerManager implements vscode.Disposable {
 
     const sfsRoot = this.findSfsRoot();
     if (!sfsRoot) {
-      this.outputChannel.appendLine('[SFS] skill_forge_studio/ not found in workspace');
-      this.setStatus('error');
+      if (!this._sfsRootWarned) {
+        this.outputChannel.appendLine('[SFS] Local backend not found — Skill Forge works offline with templates (this is normal)');
+        this._sfsRootWarned = true;
+      }
+      // Not an error — SFS is optional. Keep status neutral.
+      this.setStatus('stopped');
       return false;
     }
 
@@ -256,6 +261,11 @@ export class SfsServerManager implements vscode.Disposable {
     this.statusBarItem.text = `${icons[this._status]} Skill Forge`;
     this.statusBarItem.tooltip = `Skill Forge Studio: ${this._status}`;
     this.statusBarItem.color = colors[this._status];
-    this.statusBarItem.show();
+    // Only show when there's something meaningful to display
+    if (this._status === 'running' || this._status === 'starting' || this._status === 'error') {
+      this.statusBarItem.show();
+    } else {
+      this.statusBarItem.hide();
+    }
   }
 }

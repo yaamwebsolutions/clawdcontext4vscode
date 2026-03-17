@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.6] — 2026-03-17
+
+### Fixed
+- **SFS graceful degradation** — "Toggle Skill Forge Server" no longer spams `[SFS] skill_forge_studio/ not found` on every click. Message logs once, then stays silent
+- **SFS status bar hidden when irrelevant** — Status bar item only shows when backend is running, starting, or in error. No more permanent error icon when SFS folder is absent
+- **SFS "not found" is no longer an error** — Missing `skill_forge_studio/` sets status to `stopped` (neutral) instead of `error` (red). SFS is optional and offline mode works perfectly
+- **Toggle command shows helpful info** — When no SFS backend is found, clicking toggle explains offline mode and offers to open the Skill Forge wizard or docs instead of silently failing
+
 ## [0.5.5] — 2026-03-17
 
 ### Fixed

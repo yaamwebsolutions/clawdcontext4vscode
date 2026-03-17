@@ -141,9 +141,26 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('clawdcontext.osStatus', showOSStatus),
     // --- Skill Forge ---
     vscode.commands.registerCommand('clawdcontext.skillForge', () => openSkillForgePanel(sfsDeps)),
-    vscode.commands.registerCommand('clawdcontext.skillForgeToggleServer', () => {
-      if (sfsServerManager.status === 'running') { sfsServerManager.stop(); }
-      else { sfsServerManager.start(); }
+    vscode.commands.registerCommand('clawdcontext.skillForgeToggleServer', async () => {
+      if (sfsServerManager.status === 'running') {
+        sfsServerManager.stop();
+      } else if (sfsServerManager.findSfsRoot()) {
+        sfsServerManager.start();
+      } else {
+        // No SFS folder — explain that offline mode works fine
+        const choice = await vscode.window.showInformationMessage(
+          'Skill Forge Studio backend not found in this workspace. '
+          + 'The Skill Forge wizard works offline with templates — no backend needed.',
+          'Open Wizard', 'Learn More',
+        );
+        if (choice === 'Open Wizard') {
+          vscode.commands.executeCommand('clawdcontext.skillForge');
+        } else if (choice === 'Learn More') {
+          vscode.env.openExternal(vscode.Uri.parse(
+            'https://github.com/yaamwebsolutions/clawdcontext4vscode#getting-a-fully-working-setup-5-minutes',
+          ));
+        }
+      }
     }),
   );
 
