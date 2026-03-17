@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.4] — 2026-03-17
+
+### Added
+- **Model context window registry** — Auto-detects context window size from your configured AI model (35 models across OpenAI, Anthropic, DeepSeek, Ollama). CER calculations now use the correct budget without manual configuration.
+- **Dashboard budget source indicator** — Metrics panel shows where the token budget comes from: model name, manual override, or default
+
+### Fixed
+- **Branding consistency** — Replaced 6 Claude-specific references with generic "AI agent" wording across Skill Forge UI, prompts, generator labels, and settings descriptions
+
 ## [0.5.3] — 2026-03-16
 
 ### Added

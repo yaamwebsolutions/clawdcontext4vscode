@@ -281,6 +281,7 @@ function runAiExportTests(): void {
       "aiTestConnection", "aiReviewConfig", "aiExplainDiagnostic", "aiSuggestRefactor",
       "aiSecurityReview", "aiValidateWorkspace", "aiValidateFile",
       "aiGenerateMissing", "aiGenerateFile", "aiFixCurrentFile", "aiDetectContradictions",
+      "lookupModelContextWindow", "getEffectiveTokenBudget",
     ];
 
     const missing: string[] = [];

@@ -16,7 +16,7 @@ interface Archetype {
 }
 
 const ARCHETYPES: Archetype[] = [
-  { id: 'A', name: 'Pure Philosophy', tier: '1', icon: '✦', color: '#788c5d', desc: 'Single SKILL.md — changes how Claude thinks, not what tools it uses.', structure: 'SKILL.md (40-100 lines)', example: 'frontend-design, brand-guidelines' },
+  { id: 'A', name: 'Pure Philosophy', tier: '1', icon: '✦', color: '#788c5d', desc: 'Single SKILL.md — changes how the agent thinks, not what tools it uses.', structure: 'SKILL.md (40-100 lines)', example: 'frontend-design, brand-guidelines' },
   { id: 'B', name: 'Dispatcher + Templates', tier: '1-2', icon: '⎔', color: '#2d8b8b', desc: 'Thin router delegating to specialized template files.', structure: 'SKILL.md + templates/', example: 'internal-comms, theme-factory' },
   { id: 'C', name: 'Routing Hub + References', tier: '3-4', icon: '◈', color: '#d4a03c', desc: 'Routes to deep reference docs per domain/framework.', structure: 'SKILL.md + references/', example: 'pptx, mcp-builder' },
   { id: 'D', name: 'Scripts Library', tier: '3-4', icon: '⚙', color: '#d97757', desc: 'SKILL.md paired with purpose-built scripts.', structure: 'SKILL.md + scripts/', example: 'xlsx, pdf, slack-gif-creator' },
@@ -231,7 +231,7 @@ description: "{{description}}. Use when {{triggers}}."
  * ClawdContext: Create Skill with Skill Forge
  *
  * Opens an interactive webview panel with an 8-step wizard for building
- * production-grade Claude skills based on the 7 Archetype system.
+ * production-grade AI agent skills based on the 7 Archetype system.
  */
 export async function openSkillForge(): Promise<void> {
   const panel = vscode.window.createWebviewPanel(
@@ -413,7 +413,7 @@ function getSkillForgeHtml(): string {
   <span class="header-icon">◆</span>
   <div>
     <h1>Skill Forge Studio</h1>
-    <p class="sub">Build production-grade Claude skills in your workspace</p>
+    <p class="sub">Build production-grade AI agent skills in your workspace</p>
   </div>
 </div>
 
@@ -459,7 +459,7 @@ ${ARCHETYPES.map(a => `
     </div>
     <div class="field">
       <label for="skillDesc">Description</label>
-      <textarea id="skillDesc" placeholder="What does this skill enable Claude to do?" oninput="updatePreview()"></textarea>
+      <textarea id="skillDesc" placeholder="What does this skill enable the agent to do?" oninput="updatePreview()"></textarea>
     </div>
     <div class="field">
       <label for="skillTriggers">Trigger Phrases</label>

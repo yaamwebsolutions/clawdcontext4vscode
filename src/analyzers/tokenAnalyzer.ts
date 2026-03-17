@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { classifyCerStatus } from './cerThresholds';
+import { getEffectiveTokenBudget } from '../ai/modelRegistry';
 
 // ─── Token Estimation ───────────────────────────────────────────────
 // BPE-approximation tokenizer: handles code, markdown, whitespace,
@@ -322,7 +323,7 @@ function extractMetadata(content: string, layer: LayerType): Record<string, any>
 
 export function calculateBudget(files: AgentFile[]): ContextBudget {
   const config = vscode.workspace.getConfiguration('clawdcontext');
-  const totalBudget = config.get<number>('tokenBudget', 200000);
+  const { budget: totalBudget } = getEffectiveTokenBudget();
   const warnThreshold = config.get<number>('cerWarningThreshold', 0.4);
   const critThreshold = config.get<number>('cerCriticalThreshold', 0.2);
 

@@ -211,7 +211,7 @@ async function gatherProjectContext(): Promise<string> {
     { file: 'Dockerfile', label: 'Docker containerized' },
     { file: '.github/workflows', label: 'GitHub Actions CI/CD' },
     { file: 'tsconfig.json', label: 'TypeScript' },
-    { file: '.claude/settings.json', label: 'Claude Code configured' },
+    { file: '.claude/settings.json', label: 'Agent runtime configured' },
   ];
 
   for (const check of checks) {

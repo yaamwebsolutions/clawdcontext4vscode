@@ -223,7 +223,7 @@ export class SfsClient {
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'User-Agent': 'ClawdContext-VSCode/0.5.3',
+        'User-Agent': 'ClawdContext-VSCode/0.5.4',
         ...this.authHeaders(),
       };
       if (body) { headers['Content-Length'] = String(Buffer.byteLength(body)); }

@@ -168,7 +168,7 @@ h2 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
   </div>
 </div>
 <div class="sub">
-  Build production-grade Claude skills
+  Build production-grade AI agent skills
   <span class="mode-badge ${mode === 'online' ? 'mode-online' : 'mode-offline'}" id="modeBadge">
     ${mode === 'online' ? '● Online' : '○ Offline'}
   </span>

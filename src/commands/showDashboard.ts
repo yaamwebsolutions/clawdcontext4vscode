@@ -3,7 +3,7 @@ import type { ContextBudget } from '../analyzers/tokenAnalyzer';
 import { analyzePositionalAttention } from '../analyzers/tokenAnalyzer';
 import type { LintResult } from '../analyzers/diagnosticsProvider';
 import { state } from './analyzeWorkspace';
-import { isAiEnabled, getAiConfig, getProviderLabel } from '../ai';
+import { isAiEnabled, getAiConfig, getProviderLabel, getEffectiveTokenBudget } from '../ai';
 
 /**
  * Open the CER dashboard webview panel.
@@ -119,7 +119,14 @@ function renderCerCard(cerPct: string, cerColor: string, budget: ContextBudget):
 function renderMetrics(budget: ContextBudget): string {
   const m = (val: string, label: string) =>
     `<div class="metric"><div class="mv">${val}</div><div class="ml">${label}</div></div>`;
+  const { source, model } = getEffectiveTokenBudget();
+  const budgetLabel = source === 'model'
+    ? `Budget (${model})`
+    : source === 'user'
+      ? 'Budget (manual)'
+      : 'Budget (default)';
   return `<div class="metrics">
+  ${m(`${(budget.totalBudget / 1000).toFixed(0)}K`, budgetLabel)}
   ${m(`${(budget.alwaysLoadedTokens / 1000).toFixed(1)}K`, 'Always Loaded')}
   ${m(`${(budget.onDemandTokens / 1000).toFixed(1)}K`, 'On-Demand')}
   ${m(`${(budget.reasoningHeadroom / 1000).toFixed(1)}K`, 'Headroom')}

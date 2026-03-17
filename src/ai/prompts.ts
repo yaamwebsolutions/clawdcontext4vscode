@@ -153,7 +153,7 @@ When generating, consider:
 - What files already exist (don't duplicate)
 - What the project appears to do (from file names, code patterns)
 - Current CER — if already low, generate MINIMAL content
-- The target model's context window (default 200K for Claude)
+- The target model's context window size
 
 ## Output Format
 

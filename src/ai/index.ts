@@ -79,3 +79,10 @@ export {
   aiFixCurrentFile,
   aiDetectContradictions,
 } from './commands';
+
+// ─── Model Registry ─────────────────────────────────────────────────
+
+export {
+  lookupModelContextWindow,
+  getEffectiveTokenBudget,
+} from './modelRegistry';
