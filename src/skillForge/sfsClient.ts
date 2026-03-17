@@ -14,6 +14,7 @@ import * as https from 'https';
 export interface SfsHealthResponse {
   status: string;
   version: string;
+  tier: string;
   ai_available: boolean;
   active_provider: string | null;
   active_model: string | null;
@@ -113,11 +114,13 @@ export class SfsClient {
   private baseUrl: string;
   private apiKey: string;
   private timeout: number;
+  private generateTimeout: number;
 
-  constructor(baseUrl = 'http://localhost:8742', apiKey = '', timeout = 30000) {
+  constructor(baseUrl = 'http://localhost:8742', apiKey = '', timeout = 30000, generateTimeout = 180000) {
     this.baseUrl = baseUrl.replace(/\/+$/, '');
     this.apiKey = apiKey;
     this.timeout = timeout;
+    this.generateTimeout = generateTimeout;
   }
 
   /** Check if the SFS backend is reachable and healthy. */
@@ -150,9 +153,10 @@ export class SfsClient {
 
   /** Generate all skill files (AI-first, template fallback). */
   async generate(config: SfsSkillConfig, provider?: string): Promise<SfsGenerateResponse> {
-    return this.post<SfsGenerateResponse>('/api/generate', {
-      config, provider: provider ?? null,
-    });
+    return this.request<SfsGenerateResponse>('POST', '/api/generate',
+      JSON.stringify({ config, provider: provider ?? null }),
+      this.generateTimeout,
+    );
   }
 
   /** Validate skill structure. */
@@ -211,7 +215,7 @@ export class SfsClient {
     });
   }
 
-  private request<T>(method: 'GET' | 'POST', path: string, body?: string): Promise<T> {
+  private request<T>(method: 'GET' | 'POST', path: string, body?: string, timeoutOverride?: number): Promise<T> {
     return new Promise((resolve, reject) => {
       const url = new URL(this.baseUrl + path);
       const isSecure = url.protocol === 'https:';
@@ -219,7 +223,7 @@ export class SfsClient {
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'User-Agent': 'ClawdContext-VSCode/0.4.1',
+        'User-Agent': 'ClawdContext-VSCode/0.5.3',
         ...this.authHeaders(),
       };
       if (body) { headers['Content-Length'] = String(Buffer.byteLength(body)); }
@@ -230,7 +234,7 @@ export class SfsClient {
         path: url.pathname + url.search,
         method,
         headers,
-        timeout: this.timeout,
+        timeout: timeoutOverride ?? this.timeout,
       }, (res) => {
         let data = '';
         res.on('data', (chunk) => { data += chunk; });

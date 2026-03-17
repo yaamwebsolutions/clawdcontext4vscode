@@ -44,8 +44,8 @@ ClawdContext is the complete VS Code toolkit for agentic AI development. It tran
 
 - **8-step guided wizard** to create production-quality SKILL.md files from scratch
 - **6 domains** (DevOps, Security, Data, Frontend, Backend, AI/ML) × **7 archetypes** (Automator, Guardian, Analyst, Builder, Optimizer, Integrator, Specialist)
-- **Online mode** — connects to the Skill Forge Studio backend for AI-powered generation with quality scoring
-- **Offline mode** — built-in templates work without any backend, no network required
+- **Online mode** — run the local backend for AI-powered generation with full control and privacy
+- **Offline mode** — built-in templates work without any backend or network
 - **AI bridge** — automatically reuses your extension AI provider settings for the backend
 - **Server lifecycle** — auto-start/stop the Python backend from within VS Code
 
@@ -62,11 +62,85 @@ ClawdContext is the complete VS Code toolkit for agentic AI development. It tran
 1. Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
 2. Run **ClawdContext: Create Skill with Skill Forge** — opens the guided wizard
 3. Follow the 8-step flow: name your skill, pick a domain, choose an archetype, define scope, and generate
-4. **Offline mode** works immediately — no setup needed, built-in templates generate a complete SKILL.md
-5. **Online mode** (optional): run **ClawdContext: Toggle Skill Forge Server** to start the backend, or set `clawdcontext.skillForge.autoStart` to `true` for automatic startup
-6. The generated SKILL.md is saved to your workspace — ready to use
+4. The status badge shows your current mode: **● Online** or **○ Offline**
+5. The generated SKILL.md is saved to your workspace — ready to use
 
-> **Tip:** Skill Forge automatically reuses your AI provider settings. If you have OpenAI/Anthropic/Ollama configured in the extension, the backend picks them up via the AI bridge — no extra configuration.
+### Skill Forge modes explained
+
+| Mode | Badge | Requires | Quality |
+|---|---|---|---|
+| **Online** | ● Online | Python backend running | AI-powered (unlimited) |
+| **Offline** | ○ Offline | Nothing | Template-based |
+
+The extension tries the local backend first. If unreachable, it falls back to offline templates. No configuration needed — it just works.
+
+### Getting a fully working setup (5 minutes)
+
+Skill Forge works out of the box in **Offline** mode (template-based, no setup needed). For **AI-powered** generation, follow these steps:
+
+#### Step 1 — Configure your AI provider in VS Code
+
+Open **Settings** (`Cmd+,` / `Ctrl+,`) and search for `clawdcontext.ai`:
+
+| Setting | Example value |
+|---|---|
+| `clawdcontext.ai.provider` | `openai` (or `anthropic`, `ollama`, `deepseek`) |
+| `clawdcontext.ai.apiKey` | `sk-...` (not needed for Ollama) |
+
+This is the **only place** you configure API keys. They never leave your machine.
+
+#### Step 2 — Start the local backend
+
+**Requirements:** Python 3.12+
+
+**Option A — one command** (recommended):
+
+```bash
+git clone https://github.com/yaamwebsolutions/clawdcontext.git
+cd clawdcontext/skill_forge_studio
+./run.sh   # macOS/Linux — creates venv, installs deps, starts on :8742
+```
+
+On Windows (PowerShell):
+```powershell
+git clone https://github.com/yaamwebsolutions/clawdcontext.git
+cd clawdcontext\skill_forge_studio
+.\run.ps1
+```
+
+**Option B — manual:**
+
+```bash
+cd clawdcontext/skill_forge_studio
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn backend.main:app --reload --port 8742
+```
+
+**Option C — Docker:**
+
+```bash
+cd clawdcontext/skill_forge_studio
+docker compose up -d
+```
+
+#### Step 3 — Verify
+
+```bash
+curl http://localhost:8742/health
+# {"status":"ok","ai_available":true,...}
+```
+
+The extension detects the backend automatically — the badge switches to **● Online**.
+
+#### Step 4 — Create your first skill
+
+1. `Cmd+Shift+P` → **ClawdContext: Create Skill with Skill Forge**
+2. Follow the 8-step wizard: name, domain, archetype, scope, generate
+3. Files are written to `.clawdcontext/skills/<name>/` in your workspace
+
+> **How it works:** The extension forwards your AI provider settings to the local backend via the AI bridge. No `.env` file needed — VS Code settings are the single source of truth.
 
 ---
 
@@ -161,6 +235,7 @@ No telemetry. No analytics. No tracking.
 |---|---|---|
 | `clawdcontext.skillForge.serverUrl` | `http://localhost:8742` | Skill Forge Studio backend URL |
 | `clawdcontext.skillForge.apiKey` | *(empty)* | API key for the backend (if protected) |
+| `clawdcontext.skillForge.generateTimeout` | `180` | Timeout in seconds for AI skill generation (30–600) |
 | `clawdcontext.skillForge.autoStart` | `false` | Auto-start the Python backend on activation |
 
 All settings: [full configuration reference →](https://github.com/yaamwebsolutions/clawdcontext4vscode#minimal-settings-start-here)

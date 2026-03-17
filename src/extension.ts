@@ -98,6 +98,8 @@ export function activate(context: vscode.ExtensionContext): void {
   const sfsClient = new SfsClient(
     sfsConfig.get<string>('serverUrl', 'http://localhost:8742'),
     sfsConfig.get<string>('apiKey', ''),
+    30_000,
+    (sfsConfig.get<number>('generateTimeout', 180)) * 1000,
   );
   const sfsServerManager = new SfsServerManager(sfsClient);
   const sfsDeps = { client: sfsClient, serverManager: sfsServerManager };

@@ -121,11 +121,17 @@ async function handleMessage(
           // If using extension AI bridge, inject provider config
           const providerOverride = await maybeInjectBridge(client);
 
-          post({ command: 'progress', message: 'Generating via Skill Forge backend...' });
+          post({ command: 'progress', message: 'Generating via Skill Forge backend (AI mode)...' });
           const data = await client.generate(config, providerOverride ?? undefined);
           post({ command: 'sfs:generate:result', success: true, data });
-        } catch {
-          // Fallback to offline if backend errors
+        } catch (err) {
+          // Show the actual error — don't silently swallow
+          const errMsg = err instanceof Error ? err.message : String(err);
+          const isTimeout = errMsg.includes('timed out');
+          const hint = isTimeout
+            ? 'AI generation timed out. The server may still be processing — try again or increase timeout.'
+            : `Backend error: ${errMsg}`;
+          vscode.window.showWarningMessage(`Skill Forge: ${hint} Falling back to templates.`);
           post({ command: 'progress', message: 'Backend error, using templates...' });
           const data = generateOfflineSkill(config);
           post({ command: 'sfs:generate:result', success: true, data, fallback: true });
@@ -178,6 +184,14 @@ async function handleMessage(
     // ─── Open docs ──────────────────────────────────────
     case 'ui:openDocs': {
       vscode.env.openExternal(vscode.Uri.parse('https://clawdcontext.com/en/skill-forge'));
+      break;
+    }
+
+    // ─── Open local install guide ───────────────────────
+    case 'ui:installLocal': {
+      vscode.env.openExternal(vscode.Uri.parse(
+        'https://github.com/yaamwebsolutions/clawdcontext4vscode#getting-a-fully-working-setup-5-minutes',
+      ));
       break;
     }
   }

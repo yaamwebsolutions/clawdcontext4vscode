@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.5.3] — 2026-03-16
+
+### Added
+- **Dedicated generate timeout** — AI generation uses 180s timeout (configurable) instead of sharing the 30s general timeout. Prevents false fallback to templates.
+- **Visible errors** — Generate errors now shown via `showWarningMessage` with actual error message instead of silent fallback
+- **Install hint** — Offline mode shows a link to install the local backend
+
+### Fixed
+- **Generate timeout causing template fallback** — AI generation makes 6+ LLM calls taking 45–120s; the 30s timeout caused silent fallback to templates
+- **Silent error swallowing** — Catch block in generate handler now shows the actual error
+
+### Removed
+- **Cloud fallback** — Removed cloud backend (`sfs.clawdcontext.com`). All AI processing is local-only: your API keys never leave your machine. Modes simplified to **● Online** (local backend) and **○ Offline** (templates).
+
+### New Settings
+- `clawdcontext.skillForge.generateTimeout` — AI generation timeout in seconds (default: 180, range: 30–600)
+
 ## [0.5.2] — 2026-03-16
 
 ### Fixed

@@ -34,6 +34,8 @@ h1 { font-size: 24px; font-weight: 700; }
 .mode-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
 .mode-online { background: rgba(5,150,105,0.2); color: #059669; }
 .mode-offline { background: rgba(100,116,139,0.2); color: #94a3b8; }
+.install-hint { font-size: 11px; color: var(--fg3); margin-top: 4px; line-height: 1.4; }
+.install-hint a { color: var(--accent); text-decoration: underline; cursor: pointer; }
 
 /* Steps bar */
 .steps-bar { display: flex; gap: 4px; margin-bottom: 24px; align-items: center; }
@@ -170,6 +172,9 @@ h2 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
   <span class="mode-badge ${mode === 'online' ? 'mode-online' : 'mode-offline'}" id="modeBadge">
     ${mode === 'online' ? '● Online' : '○ Offline'}
   </span>
+</div>
+<div class="install-hint" id="installHint" style="display:none">
+  ○ Using templates. For AI-powered generation, <a id="installLocalLink">install the local backend</a>.
 </div>
 
 <!-- AI Status -->
@@ -423,6 +428,13 @@ function init() {
   renderProbeList();
   renderArchGrid();
   renderTriggerGrid();
+  // Wire the "install local backend" link
+  const link = $('installLocalLink');
+  if (link) {
+    link.addEventListener('click', () => {
+      vscode.postMessage({ command: 'ui:installLocal' });
+    });
+  }
   // Request initial status from extension
   vscode.postMessage({ command: 'sfs:check' });
 }
@@ -819,14 +831,20 @@ function writeToWorkspace() {
 window.addEventListener('message', ev => {
   const msg = ev.data;
   switch (msg.command) {
-    case 'mode':
+    case 'mode': {
       mode = msg.online ? 'online' : 'offline';
-      $('modeBadge').className = 'mode-badge ' + (msg.online ? 'mode-online' : 'mode-offline');
-      $('modeBadge').textContent = msg.online ? '● Online' : '○ Offline';
+      const badgeClass = msg.online ? 'mode-online' : 'mode-offline';
+      const badgeText = msg.online ? '● Online' : '○ Offline';
+      $('modeBadge').className = 'mode-badge ' + badgeClass;
+      $('modeBadge').textContent = badgeText;
       aiStatus = msg.ai || aiStatus;
       $('aiDot').className = 'ai-dot ' + (aiStatus.available ? 'on' : 'off');
       $('aiLabel').textContent = aiStatus.label;
+      // Show install hint when fully offline
+      const hint = $('installHint');
+      if (hint) { hint.style.display = msg.online ? 'none' : 'block'; }
       break;
+    }
 
     case 'sfs:recommend:result':
       if (msg.data && msg.data.recommendations) {

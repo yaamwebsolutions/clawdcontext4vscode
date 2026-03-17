@@ -2,7 +2,7 @@
   "name": "clawdcontext",
   "displayName": "ClawdContext — Markdown OS for AI Agents",
   "description": "The complete VS Code toolkit for agentic AI: context health (CER dashboard), Markdown OS diagnostics, lessons governance, SKILL.md security scanning, Skill Forge Studio (guided skill creation across 6 domains × 7 archetypes), multi-provider AI support (OpenAI, Anthropic, Azure, Ollama, DeepSeek), and enterprise-ready safety — all offline-first with zero telemetry.",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "publisher": "clawdcontext",
   "author": {
     "name": "Claudisiar"
@@ -346,12 +346,24 @@
           "group": "2_refactor@3"
         },
         {
+          "command": "clawdcontext.archiveDeprecated",
+          "group": "2_refactor@4"
+        },
+        {
+          "command": "clawdcontext.generateReport",
+          "group": "1_analyze@5"
+        },
+        {
           "submenu": "clawdcontext.aiSubmenu",
           "when": "clawdcontext:aiEnabled",
           "group": "3_ai@1"
         }
       ],
       "clawdcontext.aiSubmenu": [
+        {
+          "command": "clawdcontext.aiTestConnection",
+          "group": "0_connection@1"
+        },
         {
           "command": "clawdcontext.aiValidateFile",
           "group": "1_validate@1"
@@ -408,6 +420,11 @@
           "group": "navigation@0"
         },
         {
+          "command": "clawdcontext.skillForgeToggleServer",
+          "when": "view == clawdcontext.layers",
+          "group": "navigation@-1"
+        },
+        {
           "command": "clawdcontext.refreshTree",
           "when": "view =~ /clawdcontext/",
           "group": "navigation@1"
@@ -461,6 +478,16 @@
           "command": "clawdcontext.osStatus",
           "when": "view == clawdcontext.layers",
           "group": "overflow@7"
+        },
+        {
+          "command": "clawdcontext.aiTestConnection",
+          "when": "view == clawdcontext.layers && clawdcontext:aiEnabled",
+          "group": "overflow@8"
+        },
+        {
+          "command": "clawdcontext.generateReport",
+          "when": "view == clawdcontext.health",
+          "group": "overflow@2"
         }
       ],
       "view/item/context": [
@@ -488,6 +515,11 @@
           "command": "clawdcontext.promoteLessons",
           "when": "view == clawdcontext.lessons",
           "group": "1_actions@2"
+        },
+        {
+          "command": "clawdcontext.archiveDeprecated",
+          "when": "view == clawdcontext.lessons",
+          "group": "1_actions@3"
         }
       ],
       "commandPalette": [
@@ -514,6 +546,30 @@
         {
           "command": "clawdcontext.aiContradictions",
           "when": "clawdcontext:aiEnabled"
+        },
+        {
+          "command": "clawdcontext.aiTestConnection",
+          "when": "clawdcontext:aiEnabled"
+        },
+        {
+          "command": "clawdcontext.aiReviewConfig",
+          "when": "clawdcontext:aiEnabled"
+        },
+        {
+          "command": "clawdcontext.aiExplainDiagnostic",
+          "when": "clawdcontext:aiEnabled"
+        },
+        {
+          "command": "clawdcontext.aiSuggestRefactor",
+          "when": "clawdcontext:aiEnabled"
+        },
+        {
+          "command": "clawdcontext.aiSecurityReview",
+          "when": "clawdcontext:aiEnabled"
+        },
+        {
+          "command": "clawdcontext.refreshTree",
+          "when": "false"
         }
       ]
     },
@@ -701,6 +757,14 @@
           "type": "string",
           "default": "",
           "description": "Optional API key for the Skill Forge Studio backend (if protected)."
+        },
+        "clawdcontext.skillForge.generateTimeout": {
+          "type": "number",
+          "default": 180,
+          "minimum": 30,
+          "maximum": 600,
+          "description": "Timeout in seconds for AI-powered skill generation (default: 180s).",
+          "markdownDescription": "Timeout in seconds for AI-powered skill generation.\n\nAI generation makes multiple LLM calls and can take 30–120s. Increase if you see timeout errors.\n\nDefault: `180` (3 minutes)"
         },
         "clawdcontext.skillForge.autoStart": {
           "type": "boolean",
