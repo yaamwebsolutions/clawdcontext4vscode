@@ -887,7 +887,7 @@
     "@types/vscode": "^1.96.0",
     "@types/node": "^25.3.0",
     "@eslint/js": "^9.0.0",
-    "typescript-eslint": "^8.0.0",
+    "typescript-eslint": "^8.57.1",
     "eslint": "^10.0.2",
     "typescript": "^5.7.0",
     "@vscode/vsce": "^3.0.0"
