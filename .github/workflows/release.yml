@@ -18,7 +18,7 @@ jobs:
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
         uses: actions/setup-node@v4
